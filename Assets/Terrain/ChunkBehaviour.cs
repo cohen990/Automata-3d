@@ -1,0 +1,27 @@
+﻿using TreeEditor;
+using UnityEngine;
+using Random = System.Random;
+
+namespace Terrain
+{
+    public class ChunkBehaviour : MonoBehaviour
+    {
+        public void Initialize(BoundsInt chunkBounds)
+        {
+            var chunk = new Chunk(chunkBounds);
+            for (var x = chunkBounds.xMin; x < chunkBounds.xMax; x++)
+            {
+                for (var y = chunkBounds.yMin; y < chunkBounds.yMax; y++)
+                {
+                    for (var z = chunkBounds.zMin; z < chunkBounds.zMax; z++)
+                    {
+                        var noiseValue = SimplexNoise.Noise.CalcPixel3D(x, y, z, 0.01f);
+                        chunk.SetBlock(new Vector3Int(x, y, z), noiseValue >= 128? 1: 0);
+                    }
+                }
+            }
+
+            ChunkMesh.Generate(GetComponent<MeshFilter>(), chunk);
+        }
+    }
+}

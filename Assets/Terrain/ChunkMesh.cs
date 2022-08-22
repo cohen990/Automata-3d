@@ -5,31 +5,36 @@ using UnityEngine.Rendering;
 
 namespace Terrain
 {
-    public class TerrainMesh : MonoBehaviour
+    public static class ChunkMesh
     {
-        private void Start()
+        public static void Generate(MeshFilter meshFilter, Chunk chunk)
         {
             var verticesBuffer = new OrderedSet<Vector3>();
             var trianglesBuffer = new List<int>();
-            const int chunkBoundsX = 16;
-            const int chunkBoundsY = 64;
-            const int chunkBoundsZ = 16;
-            for (var x = 0; x < chunkBoundsX; x++)
-            for (var y = 0; y < chunkBoundsY; y++)
-            for (var z = 0; z < chunkBoundsZ; z++)
-            {
-                var faceRenderFlags = Faces.None;
-                if (x == 0) faceRenderFlags |= Faces.NegativeX;
-                if (x == chunkBoundsX - 1) faceRenderFlags |= Faces.PositiveX;
-                if (y == 0) faceRenderFlags |= Faces.NegativeY;
-                if (y == chunkBoundsY - 1) faceRenderFlags |= Faces.PositiveY;
-                if (z == 0) faceRenderFlags |= Faces.NegativeZ;
-                if (z == chunkBoundsZ - 1) faceRenderFlags |= Faces.PositiveZ;
 
-                MakeBlock(x, y, z, verticesBuffer, trianglesBuffer, faceRenderFlags);
+            foreach (var block in chunk)
+            {
+                if (block.Value == 0) continue;
+
+                var faceRenderFlags = Faces.None;
+                if (block.Key.x == chunk.Bounds.xMin || chunk.BlockAt(block.Key + new Vector3Int(-1, 0, 0)) == 0)
+                    faceRenderFlags |= Faces.NegativeX;
+                if (block.Key.x == chunk.Bounds.xMax - 1 || chunk.BlockAt(block.Key + new Vector3Int(1, 0, 0)) == 0)
+                    faceRenderFlags |= Faces.PositiveX;
+                if (block.Key.y == chunk.Bounds.yMin || chunk.BlockAt(block.Key + new Vector3Int(0, -1, 0)) == 0)
+                    faceRenderFlags |= Faces.NegativeY;
+                if (block.Key.y == chunk.Bounds.yMax - 1 || chunk.BlockAt(block.Key + new Vector3Int(0, 1, 0)) == 0)
+                    faceRenderFlags |= Faces.PositiveY;
+                if (block.Key.z == chunk.Bounds.zMin || chunk.BlockAt(block.Key + new Vector3Int(0, 0, -1)) == 0)
+                    faceRenderFlags |= Faces.NegativeZ;
+                if (block.Key.z == chunk.Bounds.zMax - 1 || chunk.BlockAt(block.Key + new Vector3Int(0, 0, 1)) == 0)
+                    faceRenderFlags |= Faces.PositiveZ;
+
+                MakeBlockMesh(block.Key.x, block.Key.y, block.Key.z, verticesBuffer, trianglesBuffer,
+                    faceRenderFlags);
             }
 
-            var mesh = GetComponent<MeshFilter>().mesh;
+            var mesh = meshFilter.mesh;
             mesh.indexFormat = IndexFormat.UInt32;
             mesh.Clear();
             mesh.vertices = verticesBuffer.ToArray();
@@ -38,7 +43,7 @@ namespace Terrain
             mesh.RecalculateNormals();
         }
 
-        private static void MakeBlock(int x, int y, int z, OrderedSet<Vector3> verticesBuffer,
+        private static void MakeBlockMesh(int x, int y, int z, OrderedSet<Vector3> verticesBuffer,
             List<int> trianglesBuffer,
             Faces facesToRender)
         {
