@@ -11,6 +11,7 @@ namespace Terrain
         {
             var verticesBuffer = new OrderedSet<Vector3>();
             var trianglesBuffer = new List<int>();
+            var normalsBuffer = new List<Vector3>();
 
             foreach (var block in chunk)
             {
@@ -30,7 +31,7 @@ namespace Terrain
                 if (block.Key.z == chunk.Bounds.zMax - 1 || chunk.BlockAt(block.Key + new Vector3Int(0, 0, 1)) == 0)
                     faceRenderFlags |= Faces.PositiveZ;
 
-                MakeBlockMesh(block.Key.x, block.Key.y, block.Key.z, verticesBuffer, trianglesBuffer,
+                MakeBlockMesh(block.Key.x, block.Key.y, block.Key.z, verticesBuffer, trianglesBuffer, normalsBuffer,
                     faceRenderFlags);
             }
 
@@ -39,12 +40,23 @@ namespace Terrain
             mesh.Clear();
             mesh.vertices = verticesBuffer.ToArray();
             mesh.triangles = trianglesBuffer.ToArray();
+            mesh.normals = normalsBuffer.ToArray();
+
+            var uvs = new Vector2[mesh.vertices.Length];
+
+            for (var i = 0; i < uvs.Length; i++)
+            {
+                var thing = new Vector2(mesh.vertices[i].x, mesh.vertices[i].z);
+                uvs[i] = thing;
+            }
+
+            mesh.uv = uvs;
             mesh.Optimize();
-            mesh.RecalculateNormals();
+            // mesh.RecalculateNormals();
         }
 
         private static void MakeBlockMesh(int x, int y, int z, OrderedSet<Vector3> verticesBuffer,
-            List<int> trianglesBuffer,
+            List<int> trianglesBuffer, List<Vector3> normalsBuffer,
             Faces facesToRender)
         {
             Vector3[] vertices =
@@ -60,6 +72,17 @@ namespace Terrain
             };
 
             verticesBuffer.Add(vertices);
+            normalsBuffer.AddRange(new List<Vector3>
+            {
+                new Vector3(-1, -1, -1),
+                new Vector3(-1, -1, 1),
+                new Vector3(-1, 1, 1),
+                new Vector3(-1, 1, -1),
+                new Vector3(1, 1, -1),
+                new Vector3(1, 1, 1),
+                new Vector3(1, -1, 1),
+                new Vector3(1, -1, -1)
+            });
 
             void RenderIfShouldRender(Faces face)
             {
