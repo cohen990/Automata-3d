@@ -41,6 +41,7 @@ namespace Terrain
             }
 
             ChunkMesh.Generate(GetComponent<MeshFilter>(), chunk);
+            GetComponent<MeshCollider>().sharedMesh = GetComponent<MeshFilter>().sharedMesh;
         }
     }
 }

@@ -7,6 +7,7 @@ namespace Terrain
     public class Terrain : MonoBehaviour
     {
         [SerializeField] public GameObject chunkPrefab;
+        public Vector3 Spawn { get; private set; }
 
         private Random _rng;
 
@@ -17,7 +18,7 @@ namespace Terrain
             const int chunkSize = 16;
             const int worldHeight = 32;
 
-            const int worldSize = 50;
+            const int worldSize = 5;
 
             for (var x = 0; x < worldSize; x++)
             for (var z = 0; z < worldSize; z++)
@@ -27,6 +28,8 @@ namespace Terrain
                 var chunkBounds = new BoundsInt(x * chunkSize, 0, z * chunkSize, chunkSize, worldHeight, chunkSize);
                 chunk.GetComponent<ChunkBehaviour>().Initialize(chunkBounds);
             }
+
+            Spawn = new Vector3(chunkSize * (worldSize / 2), worldHeight, chunkSize * (worldSize / 2));
         }
     }
 }
