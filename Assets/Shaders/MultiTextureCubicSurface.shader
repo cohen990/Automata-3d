@@ -60,8 +60,7 @@
             }
             else if(dot(o.Normal, vector<float, 3>(1, 0, 0)) >= threshold)
             {
-                i.uv_MainTex = float2(0, 0);
-                // i.uv_MainTex = float2((i.uv_MainTex.x + 1 + x_offset) / width, (i.uv_MainTex.y + 3 + y_offset) / height);
+                i.uv_MainTex = float2((i.uv_MainTex.x + 1 + x_offset) / width, (i.uv_MainTex.y + 3 + y_offset) / height);
             }
             else if(dot(o.Normal, vector<float, 3>(-1, 0, 0)) >= threshold)
             {
