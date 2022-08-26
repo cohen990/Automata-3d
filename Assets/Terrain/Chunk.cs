@@ -28,7 +28,8 @@ namespace Terrain
 
         public int BlockAt(Vector3Int key)
         {
-            return _dictionary[key];
+            var found = _dictionary.TryGetValue(key, out var value);
+            return found ? value : -1;
         }
     }
 }

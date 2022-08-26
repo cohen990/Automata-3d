@@ -6,39 +6,38 @@ namespace Terrain
     {
         private static readonly int[] NegativeXFace =
         {
-            0, 1, 2,
-            0, 2, 3
+            2, 5, 8,
+            2, 8, 11
         };
 
         private static readonly int[] PositiveXFace =
         {
-            4, 5, 6,
-            4, 6, 7
+            14, 17, 20,
+            14, 20, 23
         };
 
         private static readonly int[] NegativeYFace =
         {
-            7, 6, 1,
-            7, 1, 0
+            22, 19, 4,
+            22, 4, 1
         };
 
         private static readonly int[] PositiveYFace =
         {
-            3, 2, 5,
-            3, 5, 4
+            10, 7, 16,
+            10, 16, 13
         };
-        
 
         private static readonly int[] NegativeZFace =
         {
-            7, 0, 3,
-            7, 3, 4
+            21, 0, 9,
+            21, 9, 12
         };
-        
+
         private static readonly int[] PositiveZFace =
         {
-            1, 6, 5,
-            1, 5, 2
+            3, 18, 15,
+            3, 15, 6
         };
 
 

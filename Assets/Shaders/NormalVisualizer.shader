@@ -19,7 +19,6 @@
             struct appdata
             {
                 float4 vertex : POSITION;
-                float2 uv : TEXCOORD0;
                 float3 normal : NORMAL;
             };
 
@@ -27,7 +26,6 @@
             {
                 float4 vertex : SV_POSITION;
                 float3 normal : NORMAL;
-                float2 uv : TEXCOORD0;
             };
 
             v2f vert (appdata v)
@@ -35,18 +33,44 @@
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.normal = v.normal;
-                o.uv = v.uv;
                 return o;
             }
 
             fixed4 frag (v2f i) : SV_Target
             {
-                const float x_dot = dot(i.normal, vector<float, 3>(1, 0, 0));
-                const float y_dot = dot(i.normal, vector<float, 3>(0, 1, 0));
-                const float z_dot = dot(i.normal, vector<float, 3>(0, 0, 1));
-                fixed4 col = {x_dot, y_dot, z_dot, 1};
-                
-                return col;
+                float threshold = 0.9;
+                if(dot(i.normal, vector<float, 3>(0, 1, 0)) >= threshold)
+                {
+                    fixed4 col = {1, 0, 0, 1};
+                    return col;
+                }
+                if(dot(i.normal, vector<float, 3>(0, -1, 0)) >= threshold)
+                {
+                    fixed4 col = {0, 1, 0, 1};
+                    return col;
+                }
+                if(dot(i.normal, vector<float, 3>(1, 0, 0)) >= threshold)
+                {
+                    fixed4 col = {0, 0, 1, 1};
+                    return col;
+                }
+                if(dot(i.normal, vector<float, 3>(-1, 0, 0)) >= threshold)
+                {
+                    fixed4 col = {1, 0, 1, 1};
+                    return col;
+                }
+                if(dot(i.normal, vector<float, 3>(0, 0, 1)) >= threshold)
+                {
+                    fixed4 col = {0, 1, 1, 1};
+                    return col;
+                }
+                if(dot(i.normal, vector<float, 3>(0, 0, -1)) >= threshold)
+                {
+                    fixed4 col = {1, 1, 1, 1};
+                    return col;
+                }
+                fixed4 black = {0, 0, 0, 1};
+                return black;
             }
             ENDHLSL
         }

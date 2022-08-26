@@ -9,86 +9,86 @@ namespace Terrain
     {
         public static void Generate(MeshFilter meshFilter, Chunk chunk)
         {
-            var verticesBuffer = new OrderedSet<Vector3>();
+            var cornersBuffer = new OrderedSet<Corner>();
             var trianglesBuffer = new List<int>();
-            var normalsBuffer = new List<Vector3>();
+
+            var dirtUV1 = new Vector2(0, 0);
+            var grassUV1 = new Vector2(1, 0);
 
             foreach (var block in chunk)
             {
                 if (block.Value == 0) continue;
-
+                
                 var faceRenderFlags = Faces.None;
-                if (block.Key.x == chunk.Bounds.xMin || chunk.BlockAt(block.Key + new Vector3Int(-1, 0, 0)) == 0)
+                if (chunk.BlockAt(block.Key + new Vector3Int(-1, 0, 0)) <= 0)
                     faceRenderFlags |= Faces.NegativeX;
-                if (block.Key.x == chunk.Bounds.xMax - 1 || chunk.BlockAt(block.Key + new Vector3Int(1, 0, 0)) == 0)
+                if (chunk.BlockAt(block.Key + new Vector3Int(1, 0, 0)) <= 0)
                     faceRenderFlags |= Faces.PositiveX;
-                if (block.Key.y == chunk.Bounds.yMin || chunk.BlockAt(block.Key + new Vector3Int(0, -1, 0)) == 0)
+                if (chunk.BlockAt(block.Key + new Vector3Int(0, -1, 0)) <= 0)
                     faceRenderFlags |= Faces.NegativeY;
-                if (block.Key.y == chunk.Bounds.yMax - 1 || chunk.BlockAt(block.Key + new Vector3Int(0, 1, 0)) == 0)
+                if (chunk.BlockAt(block.Key + new Vector3Int(0, 1, 0)) <= 0)
                     faceRenderFlags |= Faces.PositiveY;
-                if (block.Key.z == chunk.Bounds.zMin || chunk.BlockAt(block.Key + new Vector3Int(0, 0, -1)) == 0)
+                if (chunk.BlockAt(block.Key + new Vector3Int(0, 0, -1)) <= 0)
                     faceRenderFlags |= Faces.NegativeZ;
-                if (block.Key.z == chunk.Bounds.zMax - 1 || chunk.BlockAt(block.Key + new Vector3Int(0, 0, 1)) == 0)
+                if (chunk.BlockAt(block.Key + new Vector3Int(0, 0, 1)) <= 0)
                     faceRenderFlags |= Faces.PositiveZ;
 
-                MakeBlockMesh(block.Key.x, block.Key.y, block.Key.z, verticesBuffer, trianglesBuffer, normalsBuffer,
-                    faceRenderFlags);
+                var uv1 = chunk.BlockAt(block.Key + new Vector3Int(0, 1, 0)) <= 0 ? grassUV1: dirtUV1;
+                MakeBlockMesh(block.Key.x, block.Key.y, block.Key.z, cornersBuffer, trianglesBuffer,
+                    faceRenderFlags, uv1);
             }
 
             var mesh = meshFilter.mesh;
             mesh.indexFormat = IndexFormat.UInt32;
             mesh.Clear();
-            mesh.vertices = verticesBuffer.ToArray();
+            mesh.vertices = cornersBuffer.Select(x => x.Vertex).ToArray();
             mesh.triangles = trianglesBuffer.ToArray();
-            mesh.normals = normalsBuffer.ToArray();
-
-            var uvs = new Vector2[mesh.vertices.Length];
-
-            for (var i = 0; i < uvs.Length; i++)
-            {
-                var thing = new Vector2(mesh.vertices[i].x, mesh.vertices[i].z);
-                uvs[i] = thing;
-            }
-
-            mesh.uv = uvs;
+            mesh.normals = cornersBuffer.Select(x => x.Normal).ToArray();
+            mesh.uv = cornersBuffer.Select(x => x.UV0).ToArray();
+            mesh.uv2 = cornersBuffer.Select(x => x.UV1).ToArray();
             mesh.Optimize();
-            // mesh.RecalculateNormals();
+            mesh.RecalculateNormals();
         }
 
-        private static void MakeBlockMesh(int x, int y, int z, OrderedSet<Vector3> verticesBuffer,
-            List<int> trianglesBuffer, List<Vector3> normalsBuffer,
-            Faces facesToRender)
+        private static void MakeBlockMesh(int x, int y, int z, OrderedSet<Corner> cornersBuffer,
+            List<int> trianglesBuffer,
+            Faces facesToRender, Vector2 uv1)
         {
-            Vector3[] vertices =
+            Corner[] corners =
             {
-                new Vector3(x, y, z),
-                new Vector3(x, y, z + 1),
-                new Vector3(x, y + 1, z + 1),
-                new Vector3(x, y + 1, z),
-                new Vector3(x + 1, y + 1, z),
-                new Vector3(x + 1, y + 1, z + 1),
-                new Vector3(x + 1, y, z + 1),
-                new Vector3(x + 1, y, z)
+                new Corner(new Vector3(x, y, z), Normals.NegativeZ, UVs.BottomLeft, uv1),
+                new Corner(new Vector3(x, y, z), Normals.NegativeY, UVs.BottomLeft, uv1),
+                new Corner(new Vector3(x, y, z), Normals.NegativeX, UVs.BottomLeft, uv1),
+                new Corner(new Vector3(x, y, z + 1), Normals.PositiveZ, UVs.TopRight, uv1),
+                new Corner(new Vector3(x, y, z + 1), Normals.NegativeY, UVs.BottomRight, uv1),
+                new Corner(new Vector3(x, y, z + 1), Normals.NegativeX, UVs.BottomRight, uv1),
+                new Corner(new Vector3(x, y + 1, z + 1), Normals.PositiveZ, UVs.TopLeft, uv1),
+                new Corner(new Vector3(x, y + 1, z + 1), Normals.PositiveY, UVs.BottomLeft, uv1),
+                new Corner(new Vector3(x, y + 1, z + 1), Normals.NegativeX, UVs.TopRight, uv1),
+                new Corner(new Vector3(x, y + 1, z), Normals.NegativeZ, UVs.BottomRight, uv1),
+                new Corner(new Vector3(x, y + 1, z), Normals.PositiveY, UVs.BottomRight, uv1),
+                new Corner(new Vector3(x, y + 1, z), Normals.NegativeX, UVs.TopLeft, uv1),
+                new Corner(new Vector3(x + 1, y + 1, z), Normals.NegativeZ, UVs.TopRight, uv1),
+                new Corner(new Vector3(x + 1, y + 1, z), Normals.PositiveY, UVs.TopRight, uv1),
+                new Corner(new Vector3(x + 1, y + 1, z), Normals.PositiveX, UVs.BottomLeft, uv1),
+                new Corner(new Vector3(x + 1, y + 1, z + 1), Normals.PositiveZ, UVs.BottomLeft, uv1),
+                new Corner(new Vector3(x + 1, y + 1, z + 1), Normals.PositiveY, UVs.TopLeft, uv1),
+                new Corner(new Vector3(x + 1, y + 1, z + 1), Normals.PositiveX, UVs.BottomRight, uv1),
+                new Corner(new Vector3(x + 1, y, z + 1), Normals.PositiveZ, UVs.BottomRight, uv1),
+                new Corner(new Vector3(x + 1, y, z + 1), Normals.NegativeY, UVs.TopRight, uv1),
+                new Corner(new Vector3(x + 1, y, z + 1), Normals.PositiveX, UVs.TopRight, uv1),
+                new Corner(new Vector3(x + 1, y, z), Normals.NegativeZ, UVs.TopLeft, uv1),
+                new Corner(new Vector3(x + 1, y, z), Normals.NegativeY, UVs.TopLeft, uv1),
+                new Corner(new Vector3(x + 1, y, z), Normals.PositiveX, UVs.TopLeft, uv1)
             };
 
-            verticesBuffer.Add(vertices);
-            normalsBuffer.AddRange(new List<Vector3>
-            {
-                new Vector3(-1, -1, -1),
-                new Vector3(-1, -1, 1),
-                new Vector3(-1, 1, 1),
-                new Vector3(-1, 1, -1),
-                new Vector3(1, 1, -1),
-                new Vector3(1, 1, 1),
-                new Vector3(1, -1, 1),
-                new Vector3(1, -1, -1)
-            });
+            cornersBuffer.Add(corners);
 
             void RenderIfShouldRender(Faces face)
             {
                 if (facesToRender.HasFlag(face))
                     trianglesBuffer.AddRange(Corners.For[face]
-                        .Select(corner => verticesBuffer.IndexOf(vertices[corner])));
+                        .Select(corner => cornersBuffer.IndexOf(corners[corner])));
             }
 
             RenderIfShouldRender(Faces.PositiveX);
@@ -98,5 +98,44 @@ namespace Terrain
             RenderIfShouldRender(Faces.PositiveZ);
             RenderIfShouldRender(Faces.NegativeZ);
         }
+    }
+
+    internal class Corner
+    {
+        public Corner(Vector3 vertex, Vector3 normal, Vector2 uv0, Vector2 uv1)
+        {
+            Vertex = vertex;
+            Normal = normal;
+            UV0 = uv0;
+            UV1 = uv1;
+        }
+
+        public Vector3 Normal { get; }
+        public Vector3 Vertex { get; }
+        public Vector2 UV0 { get; }
+        public Vector2 UV1 { get; }
+
+        public override int GetHashCode()
+        {
+            return Normal.GetHashCode() ^ (Vertex.GetHashCode() << 2) ^ (UV0.GetHashCode() << 4);
+        }
+    }
+
+    public static class Normals
+    {
+        public static Vector3 NegativeZ = new Vector3(0, 0, -1);
+        public static Vector3 NegativeY = new Vector3(0, -1, 0);
+        public static Vector3 NegativeX = new Vector3(-1, 0, 0);
+        public static Vector3 PositiveZ = new Vector3(0, 0, 1);
+        public static Vector3 PositiveY = new Vector3(0, 1, 0);
+        public static Vector3 PositiveX = new Vector3(1, 0, 0);
+    }
+
+    public static class UVs
+    {
+        public static readonly Vector2 BottomLeft = new Vector2(0, 0);
+        public static readonly Vector2 BottomRight = new Vector2(1, 0);
+        public static readonly Vector2 TopLeft = new Vector2(0, 1);
+        public static readonly Vector2 TopRight = new Vector2(1, 1);
     }
 }
