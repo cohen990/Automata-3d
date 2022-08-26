@@ -43,7 +43,7 @@
         void surf (Input i, inout SurfaceOutputStandard o)
         {
             const int width = 6;
-            const int height = 4;
+            const int height = 8;
             const int unit_width = 3;
             const int unit_height = 4;
             const float threshold = 0.9;

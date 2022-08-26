@@ -12,8 +12,9 @@ namespace Terrain
             var cornersBuffer = new OrderedSet<Corner>();
             var trianglesBuffer = new List<int>();
 
-            var dirtUV1 = new Vector2(0, 0);
-            var grassUV1 = new Vector2(1, 0);
+            var dirtTextureLocation = new Vector2(0, 0);
+            var grassTextureLocation = new Vector2(1, 0);
+            var stoneTextureLocation = new Vector2(0, 1);
 
             foreach (var block in chunk)
             {
@@ -33,9 +34,18 @@ namespace Terrain
                 if (chunk.BlockAt(block.Key + new Vector3Int(0, 0, 1)) <= 0)
                     faceRenderFlags |= Faces.PositiveZ;
 
-                var uv1 = chunk.BlockAt(block.Key + new Vector3Int(0, 1, 0)) <= 0 ? grassUV1: dirtUV1;
+                Vector2 textureLocation;
+                if (block.Value == 2)
+                {
+                    textureLocation = stoneTextureLocation;
+                }
+                else
+                {
+                    textureLocation = chunk.BlockAt(block.Key + new Vector3Int(0, 1, 0)) <= 0 ? grassTextureLocation: dirtTextureLocation;
+                }
+                
                 MakeBlockMesh(block.Key.x, block.Key.y, block.Key.z, cornersBuffer, trianglesBuffer,
-                    faceRenderFlags, uv1);
+                    faceRenderFlags, textureLocation);
             }
 
             var mesh = meshFilter.mesh;

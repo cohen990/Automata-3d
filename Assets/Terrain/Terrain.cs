@@ -14,10 +14,10 @@ namespace Terrain
         {
             _rng = new Random();
             Noise.Seed = _rng.Next();
-            const int chunkSize = 10;
-            const int worldHeight = 10;
+            const int chunkSize = 16;
+            const int worldHeight = 32;
 
-            const int worldSize = 1;
+            const int worldSize = 50;
 
             for (var x = 0; x < worldSize; x++)
             for (var z = 0; z < worldSize; z++)
