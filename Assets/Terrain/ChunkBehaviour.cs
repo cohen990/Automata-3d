@@ -7,7 +7,7 @@ namespace Terrain
     {
         public void Initialize(BoundsInt chunkBounds)
         {
-            var chunk = new Chunk(chunkBounds);
+            var chunk = new Chunk();
             for (var x = chunkBounds.xMin; x < chunkBounds.xMax; x++)
             for (var y = chunkBounds.yMin; y < chunkBounds.yMax; y++)
             for (var z = chunkBounds.zMin; z < chunkBounds.zMax; z++)

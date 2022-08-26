@@ -1,4 +1,4 @@
-﻿Shader "Terrain/MultiTextureCubic"
+﻿Shader "Terrain/MultiTextureCubicVertex"
 {
     Properties
     {
@@ -11,7 +11,7 @@
 
         Pass
         {
-            HLSLPROGRAM
+            CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
             // make fog work
@@ -84,11 +84,13 @@
                 {
                     sub_uv = vector<half, 2>((i.uv.x + x_offset) / width, (i.uv.y + 2 + y_offset) / height);
                 }
+
+                ShadeVertexLights(i.vertex, i.normal);
                 
                 fixed4 col = tex2D(_MainTex, sub_uv);
                 return col;
             }
-            ENDHLSL
+            ENDCG
         }
     }
 }

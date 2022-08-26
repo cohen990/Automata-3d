@@ -7,13 +7,7 @@ namespace Terrain
     public class Chunk : IEnumerable<KeyValuePair<Vector3Int, int>>
     {
         private readonly Dictionary<Vector3Int, int> _dictionary = new Dictionary<Vector3Int, int>();
-        public readonly BoundsInt Bounds;
 
-        public Chunk(BoundsInt bounds)
-        {
-            Bounds = bounds;
-        }
-        
         public void SetBlock(Vector3Int position, int blockId)
         {
             _dictionary[position] = blockId;

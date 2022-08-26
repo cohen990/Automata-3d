@@ -44,8 +44,8 @@ namespace Terrain
             mesh.vertices = cornersBuffer.Select(x => x.Vertex).ToArray();
             mesh.triangles = trianglesBuffer.ToArray();
             mesh.normals = cornersBuffer.Select(x => x.Normal).ToArray();
-            mesh.uv = cornersBuffer.Select(x => x.UV0).ToArray();
-            mesh.uv2 = cornersBuffer.Select(x => x.UV1).ToArray();
+            mesh.uv = cornersBuffer.Select(x => x.uv0).ToArray();
+            mesh.uv2 = cornersBuffer.Select(x => x.uv2).ToArray();
             mesh.Optimize();
             mesh.RecalculateNormals();
         }
@@ -102,22 +102,24 @@ namespace Terrain
 
     internal class Corner
     {
-        public Corner(Vector3 vertex, Vector3 normal, Vector2 uv0, Vector2 uv1)
+        public Corner(Vector3 vertex, Vector3 normal, Vector2 uv0, Vector2 uv2)
         {
             Vertex = vertex;
             Normal = normal;
-            UV0 = uv0;
-            UV1 = uv1;
+            this.uv0 = uv0;
+            this.uv2 = uv2;
         }
 
         public Vector3 Normal { get; }
         public Vector3 Vertex { get; }
-        public Vector2 UV0 { get; }
-        public Vector2 UV1 { get; }
+        // ReSharper disable once InconsistentNaming
+        public Vector2 uv0 { get; }
+        // ReSharper disable once InconsistentNaming
+        public Vector2 uv2 { get; }
 
         public override int GetHashCode()
         {
-            return Normal.GetHashCode() ^ (Vertex.GetHashCode() << 2) ^ (UV0.GetHashCode() << 4);
+            return Normal.GetHashCode() ^ (Vertex.GetHashCode() << 2) ^ (uv0.GetHashCode() << 4);
         }
     }
 
