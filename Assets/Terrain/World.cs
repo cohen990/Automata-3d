@@ -31,14 +31,26 @@ namespace Terrain
             var found = _dictionary.TryGetValue(key, out var value);
             return found ? value : null;
         }
+        
+        private Chunk ChunkAt(Vector3Int blockPosition) =>
+            ChunkAt(new Vector2Int(blockPosition.x / _chunkSize, blockPosition.z / _chunkSize));
 
         public int BlockAt(Vector3Int blockPosition)
         {
-            var chunkX = blockPosition.x / _chunkSize;
-            var chunkZ = blockPosition.z / _chunkSize;
-
-            var block = ChunkAt(new Vector2Int(chunkX, chunkZ))?.BlockAt(blockPosition);
+            var block = ChunkAt(blockPosition)?.BlockAt(blockPosition);
             return block ?? -1;
+        }
+
+
+        public void SetBlock(Vector3Int blockPosition, int blockId)
+        {
+            var chunk = ChunkAt(blockPosition);
+            if (chunk == null)
+            {
+                return;
+            }
+            chunk.SetBlock(blockPosition, blockId);
+            chunk.Behaviour.UpdateBlock(blockPosition);
         }
     }
 }

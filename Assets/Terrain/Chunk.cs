@@ -14,6 +14,8 @@ namespace Terrain
             _yBounds = yBounds;
         }
 
+        public ChunkBehaviour Behaviour { get; set; }
+
         public void SetBlock(Vector3Int position, int blockId)
         {
             _dictionary[position] = blockId;

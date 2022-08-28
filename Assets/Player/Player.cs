@@ -1,17 +1,19 @@
-﻿using UnityEngine;
+﻿using System;
+using Terrain;
+using UnityEngine;
 using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
 
 namespace Player
 {
-    public class PlayerMovement : MonoBehaviour
+    public class Player : MonoBehaviour
     {
-        private Rigidbody _rigidBody;
-
         public float groundSpeed = 20.0f;
         public float jumpSpeed = 20.0f;
         public Transform terrainTransform;
-    
+
+        private World _world;
+        private Rigidbody _rigidBody;
         private Transform _camera;
         private Collider _collider;
         private bool? _grounded;
@@ -21,8 +23,9 @@ namespace Player
             _rigidBody = GetComponent<Rigidbody>();
             _rigidBody.constraints = RigidbodyConstraints.FreezeRotation;
             _camera = transform.Find("Camera");
-            var spawn = terrainTransform.gameObject.GetComponent<Terrain.Terrain>().Spawn;
-            _rigidBody.MovePosition(spawn);
+            var terrain = terrainTransform.gameObject.GetComponent<Terrain.Terrain>();
+            _rigidBody.MovePosition(terrain.Spawn);
+            _world = terrain.World;
             _collider = GetComponent<CapsuleCollider>();
         }
 
@@ -42,7 +45,7 @@ namespace Player
                 return _grounded.Value;
             }
         
-            var castDistance = 0.1f;
+            const float castDistance = 0.1f;
             var rayOrigin = new Vector3(_collider.bounds.center.x, _collider.bounds.min.y + castDistance/2,_collider.bounds.center.z);
             var wasHit = Physics.Raycast(new Ray(rayOrigin, Vector3.down), out _, castDistance, PhysicsLayers.TerrainMask);
             _grounded = wasHit;
@@ -59,6 +62,18 @@ namespace Player
             moveDirection.y = _rigidBody.velocity.y;
 
             _rigidBody.velocity = moveDirection;
+
+            if (Input.GetButtonDown("Fire1"))
+            {
+                var rayStart = _camera.transform.position;
+                var rayDirection = _camera.forward;
+                var rayDistance = float.PositiveInfinity;
+                var wasHit = Physics.Raycast(new Ray(rayStart, rayDirection), out var hit, rayDistance, PhysicsLayers.TerrainMask);
+                if (!wasHit) return;
+                var hitPoint = hit.point + rayDirection.normalized * 0.01f;
+                var blockPosition = new Vector3Int((int)Math.Floor(hitPoint.x), (int)Math.Floor(hitPoint.y), (int)Math.Floor(hitPoint.z));
+                _world.SetBlock(blockPosition, 0);
+            }
         }
     }
 }

@@ -1,6 +1,6 @@
 using System;
 
-namespace Terrain
+namespace Terrain.Mesh
 {
     [Flags]
     public enum Faces
