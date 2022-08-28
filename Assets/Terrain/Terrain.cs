@@ -19,7 +19,7 @@ namespace Terrain
             const int chunkSize = 16;
             const int worldHeight = 32;
 
-            const int worldSize = 1;
+            const int worldSize = 2;
             World = new World(chunkSize);
 
             for (var x = 0; x < worldSize; x++)

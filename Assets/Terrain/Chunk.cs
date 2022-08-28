@@ -7,11 +7,11 @@ namespace Terrain
     public class Chunk : IEnumerable<KeyValuePair<Vector3Int, int>>
     {
         private readonly Dictionary<Vector3Int, int> _dictionary = new Dictionary<Vector3Int, int>();
-        private readonly int _yBounds;
+        public readonly BoundsInt Bounds;
 
-        public Chunk(int yBounds)
+        public Chunk(BoundsInt bounds)
         {
-            _yBounds = yBounds;
+            Bounds = bounds;
         }
 
         public ChunkBehaviour Behaviour { get; set; }
@@ -31,15 +31,15 @@ namespace Terrain
         public int BlockAt(Vector3Int key)
         {
             var found = _dictionary.TryGetValue(key, out var value);
-            return found ? value : -1;
+            return found ? value : Block.NULL;
         }
 
         public int HighestBlockAt(int x, int z)
         {
-            for (var y = _yBounds; y >= 0; y--)
+            for (var y = Bounds.yMax; y >= 0; y--)
             {
                 var block = BlockAt(new Vector3Int(x, y, z));
-                if (block > 0)
+                if (!Block.IsEmpty(block))
                 {
                     return y;
                 }

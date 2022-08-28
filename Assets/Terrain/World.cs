@@ -38,12 +38,15 @@ namespace Terrain
         public int BlockAt(Vector3Int blockPosition)
         {
             var block = ChunkAt(blockPosition)?.BlockAt(blockPosition);
-            return block ?? -1;
+            return block ?? Block.NULL;
         }
 
 
         public void SetBlock(Vector3Int blockPosition, int blockId)
         {
+            if (BlockAt(blockPosition) == Block.BEDROCK)
+                return;
+            
             var chunk = ChunkAt(blockPosition);
             if (chunk == null)
             {
@@ -51,6 +54,28 @@ namespace Terrain
             }
             chunk.SetBlock(blockPosition, blockId);
             chunk.Behaviour.UpdateBlock(blockPosition);
+            
+            if (blockPosition.x == chunk.Bounds.xMin)
+            {
+                ForceUpdateBlock(blockPosition + new Vector3Int(-1, 0, 0));
+            }
+            if (blockPosition.x == chunk.Bounds.xMax - 1)
+            {
+                ForceUpdateBlock(blockPosition + new Vector3Int(1, 0, 0));
+            }
+            if (blockPosition.z == chunk.Bounds.zMin)
+            {
+                ForceUpdateBlock(blockPosition + new Vector3Int(0, 0, -1));
+            }
+            if (blockPosition.z == chunk.Bounds.zMax - 1)
+            {
+                ForceUpdateBlock(blockPosition + new Vector3Int(0, 0, 1));
+            }
+        }
+
+        private void ForceUpdateBlock(Vector3Int blockPosition)
+        {
+            ChunkAt(blockPosition)?.Behaviour.UpdateSingleBlock(blockPosition);
         }
     }
 }

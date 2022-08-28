@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -11,6 +12,7 @@ namespace Terrain.Mesh
         private static readonly Vector2 DirtTextureLocation = new Vector2(0, 0);
         private static readonly Vector2 GrassTextureLocation = new Vector2(1, 0);
         private static readonly Vector2 StoneTextureLocation = new Vector2(0, 1);
+        private static readonly Vector2 BedrockTextureLocation = new Vector2(1, 1);
         
         private readonly MeshFilter _filter;
         private readonly Chunk _chunk;
@@ -49,11 +51,12 @@ namespace Terrain.Mesh
             var mesh = meshFilter.mesh;
             mesh.indexFormat = IndexFormat.UInt32;
             mesh.Clear();
-            mesh.vertices = cornersBuffer.Select(x => x.Vertex).ToArray();
+            var decomposed = cornersBuffer.Decompose();
+            mesh.vertices = decomposed.Vertices;
             mesh.triangles = trianglesBuffer.ToArray();
-            mesh.normals = cornersBuffer.Select(x => x.Normal).ToArray();
-            mesh.uv = cornersBuffer.Select(x => x.uv0).ToArray();
-            mesh.uv2 = cornersBuffer.Select(x => x.uv2).ToArray();
+            mesh.normals = decomposed.Normals;
+            mesh.uv = decomposed.UV;
+            mesh.uv2 = decomposed.UV2;
 
             return new ChunkMesh(blockMeshes, cornersBuffer, meshFilter, chunk, world);
         }
@@ -71,26 +74,41 @@ namespace Terrain.Mesh
             mesh.vertices = vertices;
             
             RemoveSingleBlock(blockPosition, triangles);
-            AddSingleBlock(blockPosition + new Vector3Int(1, 0, 0), triangles);
-            AddSingleBlock(blockPosition + new Vector3Int(-1, 0, 0), triangles);
-            AddSingleBlock(blockPosition + new Vector3Int(0, 1, 0), triangles);
-            AddSingleBlock(blockPosition + new Vector3Int(0, -1, 0), triangles);
-            AddSingleBlock(blockPosition + new Vector3Int(0, 0, 1), triangles);
-            AddSingleBlock(blockPosition + new Vector3Int(0, 0, -1), triangles);
+            UpdateSingleBlock(blockPosition + new Vector3Int(1, 0, 0), triangles);
+            UpdateSingleBlock(blockPosition + new Vector3Int(-1, 0, 0), triangles);
+            UpdateSingleBlock(blockPosition + new Vector3Int(0, 1, 0), triangles);
+            UpdateSingleBlock(blockPosition + new Vector3Int(0, -1, 0), triangles);
+            UpdateSingleBlock(blockPosition + new Vector3Int(0, 0, 1), triangles);
+            UpdateSingleBlock(blockPosition + new Vector3Int(0, 0, -1), triangles);
             
             mesh.triangles = triangles;
             mesh.normals = normals;
             mesh.uv = uv;
             mesh.uv2 = uv2;
-            // update or remove those triangles
-
-            // step 2
-            // figure out which faces no longer need to be rendered
-            // identify the faces that to be removed
-            // remove the triangles for those faces from the mesh
         }
 
-        private void AddSingleBlock(Vector3Int blockPosition, IList<int> triangles)
+        public void UpdateSingleBlock(Vector3Int blockPosition)
+        {
+            var mesh = _filter.mesh;
+            var vertices = mesh.vertices;
+            var triangles = mesh.triangles;
+            var uv = mesh.uv;
+            var uv2 = mesh.uv2;
+            var normals = mesh.normals;
+            
+            mesh.Clear();
+            mesh.vertices = vertices;
+            
+            UpdateSingleBlock(blockPosition, triangles);
+            
+            mesh.triangles = triangles;
+            mesh.normals = normals;
+            mesh.uv = uv;
+            mesh.uv2 = uv2;
+            
+        }
+
+        private void UpdateSingleBlock(Vector3Int blockPosition, IList<int> triangles)
         {
             var blockMeshExists = _blockMeshes.TryGetValue(blockPosition, out var blockMesh);
             if (!blockMeshExists) return;
@@ -117,16 +135,21 @@ namespace Terrain.Mesh
         private static Vector2 TextureLocation(Chunk chunk, Vector3Int blockPosition)
         {
             var blockId = chunk.BlockAt(blockPosition);
-            Vector2 textureLocation;
-            if (blockId == 2)
+            var textureLocation = Vector2.negativeInfinity;
+            switch (blockId)
             {
-                textureLocation = StoneTextureLocation;
-            }
-            else
-            {
-                textureLocation = chunk.BlockAt(blockPosition + new Vector3Int(0, 1, 0)) <= 0
-                    ? GrassTextureLocation
-                    : DirtTextureLocation;
+                case Block.STONE:
+                    textureLocation = StoneTextureLocation;
+                    break;
+                case Block.GRASS:
+                    textureLocation = GrassTextureLocation;
+                    break;
+                case Block.DIRT:
+                    textureLocation = DirtTextureLocation;
+                    break;
+                case Block.BEDROCK:
+                    textureLocation = BedrockTextureLocation;
+                    break;
             }
 
             return textureLocation;
@@ -135,7 +158,7 @@ namespace Terrain.Mesh
         private static Faces FaceRenderFlags(World world, Vector3Int blockPosition)
         {
             var faceRenderFlags = Faces.None;
-            if (world.BlockAt(blockPosition) == 0)
+            if (Block.IsEmpty(world.BlockAt(blockPosition)))
                 return faceRenderFlags;
             
             if (world.BlockAt(blockPosition + new Vector3Int(-1, 0, 0)) <= 0)

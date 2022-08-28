@@ -7,7 +7,7 @@ namespace Terrain
     public class KeyedOrderedSet<TKey, TValue> : ICollection<TValue>
     {
         private readonly IDictionary<TKey, OrderedSetNode> _dictionary;
-        private readonly LinkedList<TValue> _linkedList;
+        protected readonly LinkedList<TValue> LinkedList;
 
         private readonly Func<TValue, TKey> _valueToKey;
 
@@ -20,7 +20,7 @@ namespace Terrain
         private KeyedOrderedSet(IEqualityComparer<TKey> comparer)
         {
             _dictionary = new Dictionary<TKey, OrderedSetNode>(comparer);
-            _linkedList = new LinkedList<TValue>();
+            LinkedList = new LinkedList<TValue>();
         }
 
 
@@ -30,7 +30,7 @@ namespace Terrain
             var found = _dictionary.TryGetValue(_valueToKey(key), out var node);
             if (!found) return false;
             _dictionary.Remove(_valueToKey(key));
-            _linkedList.Remove(node.LinkedListNode);
+            LinkedList.Remove(node.LinkedListNode);
             RecalculateIndexes();
             return true;
         }
@@ -46,13 +46,13 @@ namespace Terrain
 
         public void Clear()
         {
-            _linkedList.Clear();
+            LinkedList.Clear();
             _dictionary.Clear();
         }
 
         public IEnumerator<TValue> GetEnumerator()
         {
-            return _linkedList.GetEnumerator();
+            return LinkedList.GetEnumerator();
         }
 
         public bool Contains(TValue item)
@@ -62,7 +62,7 @@ namespace Terrain
 
         public void CopyTo(TValue[] array, int arrayIndex)
         {
-            _linkedList.CopyTo(array, arrayIndex);
+            LinkedList.CopyTo(array, arrayIndex);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -93,8 +93,8 @@ namespace Terrain
         private void Add(TValue item)
         {
             if (_dictionary.ContainsKey(_valueToKey(item))) return;
-            var node = _linkedList.AddLast(item);
-            _dictionary.Add(_valueToKey(item), new OrderedSetNode(node, _linkedList.Count - 1));
+            var node = LinkedList.AddLast(item);
+            _dictionary.Add(_valueToKey(item), new OrderedSetNode(node, LinkedList.Count - 1));
         }
 
         private class OrderedSetNode
