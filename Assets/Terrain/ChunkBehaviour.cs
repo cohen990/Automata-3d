@@ -21,9 +21,9 @@ namespace Terrain
             _collider.sharedMesh = _filter.sharedMesh;
         }
 
-        public void UpdateBlock(Vector3Int blockPosition)
+        public void UpdateBlock(Vector3Int blockPosition, int blockId)
         {
-            _chunkMesh.UpdateBlock(blockPosition);
+            _chunkMesh.UpdateBlock(blockPosition, blockId);
             _collider.sharedMesh = _filter.sharedMesh;
         }
 

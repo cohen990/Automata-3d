@@ -63,16 +63,34 @@ namespace Player
 
             _rigidBody.velocity = moveDirection;
 
-            if (Input.GetButtonDown("Fire1"))
+            if (Input.GetButtonDown("Dig"))
             {
                 var rayStart = _camera.transform.position;
                 var rayDirection = _camera.forward;
                 var rayDistance = float.PositiveInfinity;
                 var wasHit = Physics.Raycast(new Ray(rayStart, rayDirection), out var hit, rayDistance, PhysicsLayers.TerrainMask);
-                if (!wasHit) return;
-                var hitPoint = hit.point + rayDirection.normalized * 0.01f;
-                var blockPosition = new Vector3Int((int)Math.Floor(hitPoint.x), (int)Math.Floor(hitPoint.y), (int)Math.Floor(hitPoint.z));
-                _world.SetBlock(blockPosition, 0);
+                if (wasHit)
+                {
+                    var hitPoint = hit.point + rayDirection.normalized * 0.01f;
+                    var blockPosition = new Vector3Int((int) Math.Floor(hitPoint.x), (int) Math.Floor(hitPoint.y),
+                        (int) Math.Floor(hitPoint.z));
+                    _world.SetBlock(blockPosition, Block.AIR);
+                }
+            }
+
+            if (Input.GetButtonDown("Place"))
+            {
+                var rayStart = _camera.transform.position;
+                var rayDirection = _camera.forward;
+                var rayDistance = float.PositiveInfinity;
+                var wasHit = Physics.Raycast(new Ray(rayStart, rayDirection), out var hit, rayDistance, PhysicsLayers.TerrainMask);
+                if (wasHit)
+                {
+                    var hitPoint = hit.point + rayDirection.normalized * 0.01f;
+                    var blockPosition = Vector3Int.FloorToInt(hitPoint);
+                    blockPosition += Vector3Int.FloorToInt(hit.normal.normalized);
+                    _world.SetBlock(blockPosition, Block.STONE);
+                }
             }
         }
     }

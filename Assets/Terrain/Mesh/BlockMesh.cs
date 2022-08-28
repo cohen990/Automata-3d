@@ -7,12 +7,14 @@ namespace Terrain.Mesh
     public class BlockMesh
     {
         public readonly int TrianglesStart;
-        public readonly int TrianglesCount;
+        public readonly int VerticesStart;
+        public readonly int VerticesCount;
 
-        private BlockMesh(int trianglesStart, int trianglesCount)
+        private BlockMesh(int trianglesStart, int verticesStart, int verticesCount)
         {
+            VerticesCount = verticesCount;
             TrianglesStart = trianglesStart;
-            TrianglesCount = trianglesCount;
+            VerticesStart = verticesStart;
         }
 
         public static BlockMesh Generate(int x, int y, int z, CornerBuffer cornersBuffer,
@@ -20,6 +22,7 @@ namespace Terrain.Mesh
             Faces facesToRender, Vector2 uv2)
         {
             var trianglesStart = trianglesBuffer.Count;
+            var verticesStart = cornersBuffer.Count;
             
             var corners = Corners.Calculate(x, y, z, uv2);
             cornersBuffer.Add(corners);
@@ -27,7 +30,7 @@ namespace Terrain.Mesh
             var triangles = CalculateTriangles(cornersBuffer, facesToRender, corners);
             trianglesBuffer.AddRange(triangles);
 
-            return new BlockMesh(trianglesStart, triangles.Length);
+            return new BlockMesh(trianglesStart, verticesStart, corners.Length);
         }
 
         public static int[] CalculateTriangles(CornerBuffer cornersBuffer, Faces facesToRender, Corner[] corners)

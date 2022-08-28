@@ -53,7 +53,7 @@ namespace Terrain
                 return;
             }
             chunk.SetBlock(blockPosition, blockId);
-            chunk.Behaviour.UpdateBlock(blockPosition);
+            chunk.Behaviour.UpdateBlock(blockPosition, blockId);
             
             if (blockPosition.x == chunk.Bounds.xMin)
             {

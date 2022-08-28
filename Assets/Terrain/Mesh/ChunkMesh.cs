@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -61,7 +58,7 @@ namespace Terrain.Mesh
             return new ChunkMesh(blockMeshes, cornersBuffer, meshFilter, chunk, world);
         }
         
-        public void UpdateBlock(Vector3Int blockPosition)
+        public void UpdateBlock(Vector3Int blockPosition, int blockId)
         {
             var mesh = _filter.mesh;
             var vertices = mesh.vertices;
@@ -73,13 +70,13 @@ namespace Terrain.Mesh
             mesh.Clear();
             mesh.vertices = vertices;
             
-            RemoveSingleBlock(blockPosition, triangles);
-            UpdateSingleBlock(blockPosition + new Vector3Int(1, 0, 0), triangles);
-            UpdateSingleBlock(blockPosition + new Vector3Int(-1, 0, 0), triangles);
-            UpdateSingleBlock(blockPosition + new Vector3Int(0, 1, 0), triangles);
-            UpdateSingleBlock(blockPosition + new Vector3Int(0, -1, 0), triangles);
-            UpdateSingleBlock(blockPosition + new Vector3Int(0, 0, 1), triangles);
-            UpdateSingleBlock(blockPosition + new Vector3Int(0, 0, -1), triangles);
+            UpdateSingleBlock(blockPosition, triangles, uv2);
+            UpdateSingleBlock(blockPosition + new Vector3Int(1, 0, 0), triangles, uv2);
+            UpdateSingleBlock(blockPosition + new Vector3Int(-1, 0, 0), triangles, uv2);
+            UpdateSingleBlock(blockPosition + new Vector3Int(0, 1, 0), triangles, uv2);
+            UpdateSingleBlock(blockPosition + new Vector3Int(0, -1, 0), triangles, uv2);
+            UpdateSingleBlock(blockPosition + new Vector3Int(0, 0, 1), triangles, uv2);
+            UpdateSingleBlock(blockPosition + new Vector3Int(0, 0, -1), triangles, uv2);
             
             mesh.triangles = triangles;
             mesh.normals = normals;
@@ -99,7 +96,7 @@ namespace Terrain.Mesh
             mesh.Clear();
             mesh.vertices = vertices;
             
-            UpdateSingleBlock(blockPosition, triangles);
+            UpdateSingleBlock(blockPosition, triangles, uv2);
             
             mesh.triangles = triangles;
             mesh.normals = normals;
@@ -108,27 +105,24 @@ namespace Terrain.Mesh
             
         }
 
-        private void UpdateSingleBlock(Vector3Int blockPosition, IList<int> triangles)
+        private void UpdateSingleBlock(Vector3Int blockPosition, IList<int> triangles, Vector2[] uv2)
         {
             var blockMeshExists = _blockMeshes.TryGetValue(blockPosition, out var blockMesh);
             if (!blockMeshExists) return;
             
-            var uv2 = TextureLocation(_chunk, blockPosition);
+            var textureLocation = TextureLocation(_chunk, blockPosition);
 
             var blockTriangles = BlockMesh.CalculateTriangles(_cornersBuffer, FaceRenderFlags(_world, blockPosition),
-                Corners.Calculate(blockPosition, uv2));
+                Corners.Calculate(blockPosition, textureLocation));
+            
             for (var i = 0; i < blockTriangles.Length; i++)
             {
                 triangles[i + blockMesh.TrianglesStart] = blockTriangles[i];
             }
-        }
-        
-        private void RemoveSingleBlock(Vector3Int blockPosition, IList<int> triangles)
-        {
-            var blockMesh = _blockMeshes[blockPosition];
-            for (var i = blockMesh.TrianglesStart; i < blockMesh.TrianglesStart + blockMesh.TrianglesCount; i++)
+
+            for (var i = blockMesh.VerticesStart; i < blockMesh.VerticesStart + blockMesh.VerticesCount; i++)
             {
-                triangles[i] = 0;
+                uv2[i] = textureLocation;
             }
         }
 
