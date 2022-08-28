@@ -19,7 +19,7 @@ namespace Terrain
             const int worldHeight = 32;
 
             const int worldSize = 5;
-            var world = new World();
+            var world = new World(chunkSize);
 
             for (var x = 0; x < worldSize; x++)
             for (var z = 0; z < worldSize; z++)
@@ -33,7 +33,7 @@ namespace Terrain
             {
                 var chunkGameObject = Instantiate(chunkPrefab, transform);
                 chunkGameObject.name = $"Chunk ({chunk.Key.x}, {chunk.Key.y})";
-                chunkGameObject.GetComponent<ChunkBehaviour>().FormMesh(chunk.Value);
+                chunkGameObject.GetComponent<ChunkBehaviour>().FormMesh(chunk.Value, world);
             }
 
             var spawnXZChunk = worldSize / 2;
