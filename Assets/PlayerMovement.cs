@@ -1,5 +1,7 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using UnityEngine;
+using Quaternion = UnityEngine.Quaternion;
+using Vector3 = UnityEngine.Vector3;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -18,9 +20,9 @@ public class PlayerMovement : MonoBehaviour
         _rigidBody = GetComponent<Rigidbody>();
         _rigidBody.constraints = RigidbodyConstraints.FreezeRotation;
         _camera = transform.Find("Camera");
-        _collider = GetComponent<CapsuleCollider>();
         var spawn = terrainTransform.gameObject.GetComponent<Terrain.Terrain>().Spawn;
         _rigidBody.MovePosition(spawn);
+        _collider = GetComponent<BoxCollider>();
     }
 
     private void FixedUpdate()
@@ -31,6 +33,14 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    private bool IsGrounded()
+    {
+        var castDistance = 0.1f;
+        var rayOrigin = new Vector3(_collider.bounds.center.x, _collider.bounds.min.y + castDistance/2,_collider.bounds.center.z);
+        return Physics.Raycast(new Ray(rayOrigin, Vector3.down), out _, castDistance, PhysicsLayers.TerrainMask);
+    }
+
+
     void Update()
     {
         _moveDirection = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
@@ -38,14 +48,5 @@ public class PlayerMovement : MonoBehaviour
         _moveDirection = Quaternion.Euler(new Vector3(0, _camera.rotation.eulerAngles.y, 0)) * _moveDirection;
         
         _rigidBody.velocity =_moveDirection * Time.deltaTime;
-    }
-
-    private bool IsGrounded()
-    {
-        var bounds = _collider.bounds;
-        return Physics.CheckCapsule(
-            bounds.center, 
-            new Vector3(bounds.center.x, bounds.min.y - 0.2f, bounds.center.z),
-            0.18f);
     }
 }
