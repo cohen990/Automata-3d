@@ -26,7 +26,7 @@ namespace Player
             var terrain = terrainTransform.gameObject.GetComponent<Terrain.Terrain>();
             _rigidBody.MovePosition(terrain.Spawn);
             _world = terrain.World;
-            _collider = GetComponent<CapsuleCollider>();
+            _collider = GetComponent<BoxCollider>();
         }
 
         private void FixedUpdate()
