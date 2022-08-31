@@ -19,7 +19,7 @@ namespace Terrain
             const int chunkSize = 16;
             const int worldHeight = 32;
 
-            const int worldSize = 2;
+            const int worldSize = 8;
             World = new World(chunkSize);
 
             for (var x = 0; x < worldSize; x++)
@@ -35,6 +35,7 @@ namespace Terrain
                 var chunkGameObject = Instantiate(chunkPrefab, transform);
                 chunkGameObject.name = $"Chunk ({chunk.Key.x}, {chunk.Key.y})";
                 var chunkBehaviour = chunkGameObject.GetComponent<ChunkBehaviour>();
+                World.AssignBehaviourToChunk(chunkBehaviour, chunk.Value);
                 chunkBehaviour.Chunk = chunk.Value;
                 chunkBehaviour.World = World;
             }

@@ -67,7 +67,7 @@ namespace Player
             {
                 var rayStart = _camera.transform.position;
                 var rayDirection = _camera.forward;
-                var rayDistance = float.PositiveInfinity;
+                const float rayDistance = float.PositiveInfinity;
                 var wasHit = Physics.Raycast(new Ray(rayStart, rayDirection), out var hit, rayDistance, PhysicsLayers.TerrainMask);
                 if (wasHit)
                 {
@@ -82,15 +82,14 @@ namespace Player
             {
                 var rayStart = _camera.transform.position;
                 var rayDirection = _camera.forward;
-                var rayDistance = float.PositiveInfinity;
+                const float rayDistance = float.PositiveInfinity;
                 var wasHit = Physics.Raycast(new Ray(rayStart, rayDirection), out var hit, rayDistance, PhysicsLayers.TerrainMask);
-                if (wasHit)
-                {
-                    var hitPoint = hit.point + rayDirection.normalized * 0.01f;
-                    var blockPosition = Vector3Int.FloorToInt(hitPoint);
-                    blockPosition += Vector3Int.FloorToInt(hit.normal.normalized);
-                    _world.SetBlock(blockPosition, Block.STONE);
-                }
+                if (!wasHit) return;
+                
+                var hitPoint = hit.point + rayDirection.normalized * 0.01f;
+                var blockPosition = Vector3Int.FloorToInt(hitPoint);
+                blockPosition += Vector3Int.FloorToInt(hit.normal.normalized);
+                _world.SetBlock(blockPosition, Block.STONE);
             }
         }
     }

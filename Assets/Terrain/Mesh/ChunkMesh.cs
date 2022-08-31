@@ -33,15 +33,22 @@ namespace Terrain.Mesh
             var trianglesBuffer = new List<int>();
             var blockMeshes = new Dictionary<Vector3Int, BlockMesh>();
 
-            foreach (var block in chunk)
+            for (var blockIndex = 0; blockIndex < chunk.BlockCount; blockIndex++ )
             {
-                var blockPosition = block.Key;
+                var blockPosition = chunk.Vector3PositionOf(blockIndex);
                 
                 var faceRenderFlags = FaceRenderFlags(world, blockPosition);
                 var textureLocation = TextureLocation(chunk, blockPosition);
 
-                var generatedBlock = BlockMesh.Generate(blockPosition.x, blockPosition.y, blockPosition.z, cornersBuffer, trianglesBuffer,
-                    faceRenderFlags, textureLocation);
+                var generatedBlock = BlockMesh.Generate(
+                    blockPosition.x, 
+                    blockPosition.y, 
+                    blockPosition.z, 
+                    cornersBuffer, 
+                    trianglesBuffer,
+                    faceRenderFlags, 
+                    textureLocation);
+                
                 blockMeshes[blockPosition] = generatedBlock;
             }
 
@@ -58,7 +65,7 @@ namespace Terrain.Mesh
             return new ChunkMesh(blockMeshes, cornersBuffer, meshFilter, chunk, world);
         }
         
-        public void UpdateBlock(Vector3Int blockPosition, int blockId)
+        public void UpdateBlock(Vector3Int blockPosition)
         {
             var mesh = _filter.mesh;
             var vertices = mesh.vertices;
@@ -86,6 +93,8 @@ namespace Terrain.Mesh
 
         public void UpdateSingleBlock(Vector3Int blockPosition)
         {
+            if (!_blockMeshes.ContainsKey(blockPosition)) return;
+            
             var mesh = _filter.mesh;
             var vertices = mesh.vertices;
             var triangles = mesh.triangles;
@@ -143,6 +152,9 @@ namespace Terrain.Mesh
                     break;
                 case Block.BEDROCK:
                     textureLocation = BedrockTextureLocation;
+                    break;
+                case Block.AIR:
+                    textureLocation = Vector2.zero;
                     break;
             }
 

@@ -7,6 +7,7 @@ namespace Terrain
     public class World : IEnumerable<KeyValuePair<Vector2Int, Chunk>>
     {
         private readonly Dictionary<Vector2Int, Chunk> _dictionary = new Dictionary<Vector2Int, Chunk>();
+        private readonly Dictionary<Chunk, ChunkBehaviour> _chunkBehaviours = new Dictionary<Chunk, ChunkBehaviour>();
         private readonly int _chunkSize;
 
         public World(int chunkSize)
@@ -29,7 +30,7 @@ namespace Terrain
         public Chunk ChunkAt(Vector2Int key)
         {
             var found = _dictionary.TryGetValue(key, out var value);
-            return found ? value : null;
+            return found ? value : Chunk.Empty;
         }
         
         private Chunk ChunkAt(Vector3Int blockPosition) =>
@@ -37,10 +38,8 @@ namespace Terrain
 
         public int BlockAt(Vector3Int blockPosition)
         {
-            var block = ChunkAt(blockPosition)?.BlockAt(blockPosition);
-            return block ?? Block.NULL;
+            return ChunkAt(blockPosition).BlockAt(blockPosition);
         }
-
 
         public void SetBlock(Vector3Int blockPosition, int blockId)
         {
@@ -48,12 +47,11 @@ namespace Terrain
                 return;
             
             var chunk = ChunkAt(blockPosition);
-            if (chunk == null)
-            {
+            if (chunk.IsEmpty)
                 return;
-            }
+            
             chunk.SetBlock(blockPosition, blockId);
-            chunk.Behaviour.UpdateBlock(blockPosition, blockId);
+            _chunkBehaviours[chunk].UpdateBlock(blockPosition);
             
             if (blockPosition.x == chunk.Bounds.xMin)
             {
@@ -75,7 +73,16 @@ namespace Terrain
 
         private void ForceUpdateBlock(Vector3Int blockPosition)
         {
-            ChunkAt(blockPosition)?.Behaviour.UpdateSingleBlock(blockPosition);
+            if (!_chunkBehaviours.TryGetValue(ChunkAt(blockPosition), out var behaviour))
+                return;
+            
+            behaviour.UpdateSingleBlock(blockPosition);
         }
+
+        public void AssignBehaviourToChunk(ChunkBehaviour chunkBehaviour, Chunk chunk)
+        {
+            _chunkBehaviours[chunk] = chunkBehaviour;
+        }
+
     }
 }

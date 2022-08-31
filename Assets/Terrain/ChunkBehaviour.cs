@@ -16,14 +16,13 @@ namespace Terrain
         {
             _collider = GetComponent<MeshCollider>();
             _filter = GetComponent<MeshFilter>();
-            Chunk.Behaviour = this;
             _chunkMesh = ChunkMesh.Generate(_filter, Chunk, World);
             _collider.sharedMesh = _filter.sharedMesh;
         }
 
-        public void UpdateBlock(Vector3Int blockPosition, int blockId)
+        public void UpdateBlock(Vector3Int blockPosition)
         {
-            _chunkMesh.UpdateBlock(blockPosition, blockId);
+            _chunkMesh.UpdateBlock(blockPosition);
             _collider.sharedMesh = _filter.sharedMesh;
         }
 
