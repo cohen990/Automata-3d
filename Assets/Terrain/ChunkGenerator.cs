@@ -34,6 +34,7 @@ namespace Terrain
 
         private static int ChooseBlock(int y, int terrainHeight, float dirtHeight, int x, int z)
         {
+            return 1;
             if (y == 0)
             {
                 return Block.BEDROCK;

@@ -81,16 +81,18 @@ namespace Terrain
                 Add(item);
         }
         
-        public void TryGetIndexOf(TValue value, out int index)
+        public bool TryGetIndexOf(TValue value, out int index)
         {
             index = 0;
             var found = _dictionary.TryGetValue(_valueToKey(value), out var node);
             
             if(found)
                 index = node.Index;
+            
+            return found;
         }
 
-        private void Add(TValue item)
+        public void Add(TValue item)
         {
             if (_dictionary.ContainsKey(_valueToKey(item))) return;
             var node = LinkedList.AddLast(item);

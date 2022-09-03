@@ -6,31 +6,25 @@ namespace Terrain.Mesh
 {
     public class BlockMesh
     {
-        public readonly int TrianglesStart;
-        public readonly int VerticesStart;
-        public readonly int VerticesCount;
+        private readonly int[] _triangles = new int[12];
+        private int _trianglePointer;
+        public const int TRIANGLE_COUNT = 36;
 
-        private BlockMesh(int trianglesStart, int verticesStart, int verticesCount)
+        public void AddTriangle(int triangleIndex)
         {
-            VerticesCount = verticesCount;
-            TrianglesStart = trianglesStart;
-            VerticesStart = verticesStart;
+            _triangles[_trianglePointer] = triangleIndex;
+            _trianglePointer++;
         }
 
-        public static BlockMesh Generate(int x, int y, int z, CornerBuffer cornersBuffer,
+        public static void Generate(int x, int y, int z, CornerBuffer cornersBuffer,
             List<int> trianglesBuffer,
             Faces facesToRender, Vector2 uv2)
         {
-            var trianglesStart = trianglesBuffer.Count;
-            var verticesStart = cornersBuffer.Count;
-            
             var corners = Corners.Calculate(x, y, z, uv2);
             cornersBuffer.Add(corners);
 
             var triangles = CalculateTriangles(cornersBuffer, facesToRender, corners);
             trianglesBuffer.AddRange(triangles);
-
-            return new BlockMesh(trianglesStart, verticesStart, corners.Length);
         }
 
         public static int[] CalculateTriangles(CornerBuffer cornersBuffer, Faces facesToRender, Corner[] corners)
@@ -67,10 +61,17 @@ namespace Terrain.Mesh
             var trianglesGlobalVertices = trianglesLocalVertex
                 .Select(localVertex =>
                 {
-                    cornersBuffer.TryGetIndexOf(corners[localVertex], out var index);
-                    return index;
+                    if(cornersBuffer.TryGetIndexOf(corners[localVertex], out var index))
+                        return index;
+                    cornersBuffer.Add(corners[localVertex]);
+                    return cornersBuffer.Count - 1;
                 });
             return trianglesGlobalVertices;
+        }
+
+        public int Triangle(int i)
+        {
+            return _triangles[i / 3] + i % 3;
         }
     }
 }

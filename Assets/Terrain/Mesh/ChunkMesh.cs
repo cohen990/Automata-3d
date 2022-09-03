@@ -40,7 +40,7 @@ namespace Terrain.Mesh
                 var faceRenderFlags = FaceRenderFlags(world, blockPosition);
                 var textureLocation = TextureLocation(chunk, blockPosition);
 
-                var generatedBlock = BlockMesh.Generate(
+                BlockMesh.Generate(
                     blockPosition.x, 
                     blockPosition.y, 
                     blockPosition.z, 
@@ -48,8 +48,6 @@ namespace Terrain.Mesh
                     trianglesBuffer,
                     faceRenderFlags, 
                     textureLocation);
-                
-                blockMeshes[blockPosition] = generatedBlock;
             }
 
             var mesh = meshFilter.mesh;
@@ -61,34 +59,51 @@ namespace Terrain.Mesh
             mesh.normals = decomposed.Normals;
             mesh.uv = decomposed.UV;
             mesh.uv2 = decomposed.UV2;
+            mesh.Optimize();
 
+            for (var i = 0; i < mesh.triangles.Length; i += 3)
+            {
+                var flooredAverage =
+                    Vector3Int.FloorToInt((mesh.vertices[mesh.triangles[i]] + mesh.vertices[mesh.triangles[i + 1]] + mesh.vertices[mesh.triangles[i + 2]])/3);
+                var normal = Vector3Int.FloorToInt(flooredAverage - mesh.normals[mesh.triangles[i]]);
+                var coord = Vector3Int.Min(flooredAverage, normal);
+                if (!blockMeshes.ContainsKey(coord))
+                {
+                    blockMeshes[coord] = new BlockMesh();
+                }
+
+                blockMeshes[coord].AddTriangle(i);
+            }
+
+            cornersBuffer.Clear();
+            for (var i = 0; i < mesh.vertexCount; i++)
+            {
+                cornersBuffer.Add(new Corner(mesh.vertices[i], mesh.normals[i], mesh.uv[i], mesh.uv2[i]));
+            }
+            
             return new ChunkMesh(blockMeshes, cornersBuffer, meshFilter, chunk, world);
         }
         
         public void UpdateBlock(Vector3Int blockPosition)
         {
             var mesh = _filter.mesh;
-            var vertices = mesh.vertices;
             var triangles = mesh.triangles;
-            var uv = mesh.uv;
-            var uv2 = mesh.uv2;
-            var normals = mesh.normals;
+            
+            UpdateSingleBlockInternal(blockPosition, triangles);
+            UpdateSingleBlockInternal(blockPosition + new Vector3Int(1, 0, 0), triangles);
+            UpdateSingleBlockInternal(blockPosition + new Vector3Int(-1, 0, 0), triangles);
+            UpdateSingleBlockInternal(blockPosition + new Vector3Int(0, 1, 0), triangles);
+            UpdateSingleBlockInternal(blockPosition + new Vector3Int(0, -1, 0), triangles);
+            UpdateSingleBlockInternal(blockPosition + new Vector3Int(0, 0, 1), triangles);
+            UpdateSingleBlockInternal(blockPosition + new Vector3Int(0, 0, -1), triangles);
             
             mesh.Clear();
-            mesh.vertices = vertices;
-            
-            UpdateSingleBlock(blockPosition, triangles, uv2);
-            UpdateSingleBlock(blockPosition + new Vector3Int(1, 0, 0), triangles, uv2);
-            UpdateSingleBlock(blockPosition + new Vector3Int(-1, 0, 0), triangles, uv2);
-            UpdateSingleBlock(blockPosition + new Vector3Int(0, 1, 0), triangles, uv2);
-            UpdateSingleBlock(blockPosition + new Vector3Int(0, -1, 0), triangles, uv2);
-            UpdateSingleBlock(blockPosition + new Vector3Int(0, 0, 1), triangles, uv2);
-            UpdateSingleBlock(blockPosition + new Vector3Int(0, 0, -1), triangles, uv2);
-            
+            var decomposed = _cornersBuffer.Decompose();
+            mesh.vertices = decomposed.Vertices;
             mesh.triangles = triangles;
-            mesh.normals = normals;
-            mesh.uv = uv;
-            mesh.uv2 = uv2;
+            mesh.normals = decomposed.Normals;
+            mesh.uv = decomposed.UV;
+            mesh.uv2 = decomposed.UV2;
         }
 
         public void UpdateSingleBlock(Vector3Int blockPosition)
@@ -105,7 +120,7 @@ namespace Terrain.Mesh
             mesh.Clear();
             mesh.vertices = vertices;
             
-            UpdateSingleBlock(blockPosition, triangles, uv2);
+            UpdateSingleBlockInternal(blockPosition, triangles);
             
             mesh.triangles = triangles;
             mesh.normals = normals;
@@ -114,7 +129,7 @@ namespace Terrain.Mesh
             
         }
 
-        private void UpdateSingleBlock(Vector3Int blockPosition, IList<int> triangles, Vector2[] uv2)
+        private void UpdateSingleBlockInternal(Vector3Int blockPosition, IList<int> triangles)
         {
             var blockMeshExists = _blockMeshes.TryGetValue(blockPosition, out var blockMesh);
             if (!blockMeshExists) return;
@@ -126,12 +141,7 @@ namespace Terrain.Mesh
             
             for (var i = 0; i < blockTriangles.Length; i++)
             {
-                triangles[i + blockMesh.TrianglesStart] = blockTriangles[i];
-            }
-
-            for (var i = blockMesh.VerticesStart; i < blockMesh.VerticesStart + blockMesh.VerticesCount; i++)
-            {
-                uv2[i] = textureLocation;
+                triangles[blockMesh.Triangle(i)] = blockTriangles[i];
             }
         }
 
