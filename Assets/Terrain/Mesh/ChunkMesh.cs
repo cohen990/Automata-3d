@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -6,10 +7,10 @@ namespace Terrain.Mesh
 {
     public class ChunkMesh
     {
-        private static readonly Vector2 DirtTextureLocation = new Vector2(0, 0);
-        private static readonly Vector2 GrassTextureLocation = new Vector2(1, 0);
-        private static readonly Vector2 StoneTextureLocation = new Vector2(0, 1);
-        private static readonly Vector2 BedrockTextureLocation = new Vector2(1, 1);
+        private static readonly Vector2 DirtTextureLocation = new(0, 0);
+        private static readonly Vector2 GrassTextureLocation = new(1, 0);
+        private static readonly Vector2 StoneTextureLocation = new(0, 1);
+        private static readonly Vector2 BedrockTextureLocation = new(1, 1);
         
         private readonly MeshFilter _filter;
         private readonly Chunk _chunk;
@@ -50,22 +51,27 @@ namespace Terrain.Mesh
                     textureLocation);
             }
 
-            var mesh = meshFilter.mesh;
-            mesh.indexFormat = IndexFormat.UInt32;
-            mesh.Clear();
             var decomposed = cornersBuffer.Decompose();
-            mesh.vertices = decomposed.Vertices;
-            mesh.triangles = trianglesBuffer.ToArray();
-            mesh.normals = decomposed.Normals;
-            mesh.uv = decomposed.UV;
-            mesh.uv2 = decomposed.UV2;
+            var mesh = new UnityEngine.Mesh
+            {
+                indexFormat = IndexFormat.UInt32,
+                vertices = decomposed.Vertices,
+                triangles = trianglesBuffer.ToArray(),
+                normals = decomposed.Normals,
+                uv = decomposed.UV,
+                uv2 = decomposed.UV2
+            };
             mesh.Optimize();
+            meshFilter.sharedMesh = mesh;
+            var meshVertices = mesh.vertices;
+            var meshTriangles = mesh.triangles;
+            var meshNormals = mesh.normals;
 
-            for (var i = 0; i < mesh.triangles.Length; i += 3)
+            for (var i = 0; i < meshTriangles.Length; i += 3)
             {
                 var flooredAverage =
-                    Vector3Int.FloorToInt((mesh.vertices[mesh.triangles[i]] + mesh.vertices[mesh.triangles[i + 1]] + mesh.vertices[mesh.triangles[i + 2]])/3);
-                var normal = Vector3Int.FloorToInt(flooredAverage - mesh.normals[mesh.triangles[i]]);
+                    Vector3Int.FloorToInt((meshVertices[meshTriangles[i]] + meshVertices[meshTriangles[i + 1]] + meshVertices[meshTriangles[i + 2]])/3);
+                var normal = Vector3Int.FloorToInt(flooredAverage - meshNormals[meshTriangles[i]]);
                 var coord = Vector3Int.Min(flooredAverage, normal);
                 if (!blockMeshes.ContainsKey(coord))
                 {
@@ -76,9 +82,11 @@ namespace Terrain.Mesh
             }
 
             cornersBuffer.Clear();
+            var meshUV = mesh.uv;
+            var meshUV2 = mesh.uv2;
             for (var i = 0; i < mesh.vertexCount; i++)
             {
-                cornersBuffer.Add(new Corner(mesh.vertices[i], mesh.normals[i], mesh.uv[i], mesh.uv2[i]));
+                cornersBuffer.Add(new Corner(meshVertices[i], meshNormals[i], meshUV[i], meshUV2[i]));
             }
             
             return new ChunkMesh(blockMeshes, cornersBuffer, meshFilter, chunk, world);
@@ -148,25 +156,15 @@ namespace Terrain.Mesh
         private static Vector2 TextureLocation(Chunk chunk, Vector3Int blockPosition)
         {
             var blockId = chunk.BlockAt(blockPosition);
-            var textureLocation = Vector2.negativeInfinity;
-            switch (blockId)
+            var textureLocation = blockId switch
             {
-                case Block.STONE:
-                    textureLocation = StoneTextureLocation;
-                    break;
-                case Block.GRASS:
-                    textureLocation = GrassTextureLocation;
-                    break;
-                case Block.DIRT:
-                    textureLocation = DirtTextureLocation;
-                    break;
-                case Block.BEDROCK:
-                    textureLocation = BedrockTextureLocation;
-                    break;
-                case Block.AIR:
-                    textureLocation = Vector2.zero;
-                    break;
-            }
+                Block.STONE => StoneTextureLocation,
+                Block.GRASS => GrassTextureLocation,
+                Block.DIRT => DirtTextureLocation,
+                Block.BEDROCK => BedrockTextureLocation,
+                Block.AIR => Vector2.zero,
+                _ => Vector2.negativeInfinity
+            };
 
             return textureLocation;
         }

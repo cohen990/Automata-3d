@@ -8,11 +8,10 @@ namespace Terrain.Mesh
     {
         private readonly int[] _triangles = new int[12];
         private int _trianglePointer;
-        public const int TRIANGLE_COUNT = 36;
 
         public void AddTriangle(int triangleIndex)
         {
-            _triangles[_trianglePointer] = triangleIndex;
+            _triangles[_trianglePointer % 12] = triangleIndex;
             _trianglePointer++;
         }
 

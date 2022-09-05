@@ -1,0 +1,6 @@
+[Performance_test_of_10x10_mesh_generation] 1 iteration(s) completed in 00:00:00.1695720
+[Performance_test_of_10x10_mesh_generation] 10 iteration(s) completed in 00:00:01.2929992
+[Performance_test_of_16x16_mesh_generation] 1 iteration(s) completed in 00:00:01.2974277
+[Performance_test_of_16x16_mesh_generation] 10 iteration(s) completed in 00:00:11.7283628
+[Performance_test_of_16x16x17_mesh_generation] 1 iteration(s) completed in 00:00:01.2817317
+[Performance_test_of_16x16x17_mesh_generation] 10 iteration(s) completed in 00:00:13.1465751

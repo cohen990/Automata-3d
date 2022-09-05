@@ -1,0 +1,7 @@
+[Performance_test_of_10x10_mesh_generation(1)] 1 iterations completed in 00:00:12.2605458
+[Performance_test_of_10x10_mesh_generation(10)] 10 iterations completed in 00:01:52.1443608
+[Performance_test_of_1x1_mesh_generation(1)] 1 iterations completed in 00:00:00.0002969
+[Performance_test_of_1x1_mesh_generation(10)] 10 iterations completed in 00:00:00.0034981
+[Performance_test_of_1x1_mesh_generation(100)] 100 iterations completed in 00:00:00.0506848
+[Performance_test_of_1x1_mesh_generation(1000)] 1000 iterations completed in 00:00:00.3528100
+[Performance_test_of_1x1_mesh_generation(10000)] 10000 iterations completed in 00:00:03.3480388
