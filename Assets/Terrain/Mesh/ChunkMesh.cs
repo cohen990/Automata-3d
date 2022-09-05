@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -119,22 +118,18 @@ namespace Terrain.Mesh
             if (!_blockMeshes.ContainsKey(blockPosition)) return;
             
             var mesh = _filter.mesh;
-            var vertices = mesh.vertices;
             var triangles = mesh.triangles;
-            var uv = mesh.uv;
-            var uv2 = mesh.uv2;
-            var normals = mesh.normals;
             
             mesh.Clear();
-            mesh.vertices = vertices;
             
             UpdateSingleBlockInternal(blockPosition, triangles);
             
+            var decomposed = _cornersBuffer.Decompose();
+            mesh.vertices = decomposed.Vertices;
             mesh.triangles = triangles;
-            mesh.normals = normals;
-            mesh.uv = uv;
-            mesh.uv2 = uv2;
-            
+            mesh.normals = decomposed.Normals;
+            mesh.uv = decomposed.UV;
+            mesh.uv2 = decomposed.UV2;
         }
 
         private void UpdateSingleBlockInternal(Vector3Int blockPosition, IList<int> triangles)
