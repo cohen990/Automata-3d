@@ -49,7 +49,7 @@ namespace Terrain.Mesh
             0, 0, 0
         };
         
-        public static readonly Dictionary<Faces, int[]> For = new Dictionary<Faces, int[]>
+        public static readonly Dictionary<Faces, int[]> For = new()
         {
             {Faces.PositiveX, PositiveXFace},
             {Faces.NegativeX, NegativeXFace},
@@ -64,30 +64,30 @@ namespace Terrain.Mesh
         {
             Corner[] corners =
             {
-                new Corner(new Vector3(x, y, z), Normals.NegativeZ, UVs.BottomLeft, uv2),
-                new Corner(new Vector3(x, y, z), Normals.NegativeY, UVs.BottomLeft, uv2),
-                new Corner(new Vector3(x, y, z), Normals.NegativeX, UVs.BottomLeft, uv2),
-                new Corner(new Vector3(x, y, z + 1), Normals.PositiveZ, UVs.TopRight, uv2),
-                new Corner(new Vector3(x, y, z + 1), Normals.NegativeY, UVs.BottomRight, uv2),
-                new Corner(new Vector3(x, y, z + 1), Normals.NegativeX, UVs.BottomRight, uv2),
-                new Corner(new Vector3(x, y + 1, z + 1), Normals.PositiveZ, UVs.TopLeft, uv2),
-                new Corner(new Vector3(x, y + 1, z + 1), Normals.PositiveY, UVs.BottomLeft, uv2),
-                new Corner(new Vector3(x, y + 1, z + 1), Normals.NegativeX, UVs.TopRight, uv2),
-                new Corner(new Vector3(x, y + 1, z), Normals.NegativeZ, UVs.BottomRight, uv2),
-                new Corner(new Vector3(x, y + 1, z), Normals.PositiveY, UVs.BottomRight, uv2),
-                new Corner(new Vector3(x, y + 1, z), Normals.NegativeX, UVs.TopLeft, uv2),
-                new Corner(new Vector3(x + 1, y + 1, z), Normals.NegativeZ, UVs.TopRight, uv2),
-                new Corner(new Vector3(x + 1, y + 1, z), Normals.PositiveY, UVs.TopRight, uv2),
-                new Corner(new Vector3(x + 1, y + 1, z), Normals.PositiveX, UVs.BottomLeft, uv2),
-                new Corner(new Vector3(x + 1, y + 1, z + 1), Normals.PositiveZ, UVs.BottomLeft, uv2),
-                new Corner(new Vector3(x + 1, y + 1, z + 1), Normals.PositiveY, UVs.TopLeft, uv2),
-                new Corner(new Vector3(x + 1, y + 1, z + 1), Normals.PositiveX, UVs.BottomRight, uv2),
-                new Corner(new Vector3(x + 1, y, z + 1), Normals.PositiveZ, UVs.BottomRight, uv2),
-                new Corner(new Vector3(x + 1, y, z + 1), Normals.NegativeY, UVs.TopRight, uv2),
-                new Corner(new Vector3(x + 1, y, z + 1), Normals.PositiveX, UVs.TopRight, uv2),
-                new Corner(new Vector3(x + 1, y, z), Normals.NegativeZ, UVs.TopLeft, uv2),
-                new Corner(new Vector3(x + 1, y, z), Normals.NegativeY, UVs.TopLeft, uv2),
-                new Corner(new Vector3(x + 1, y, z), Normals.PositiveX, UVs.TopLeft, uv2)
+                new(new Vector3(x, y, z), Normals.NegativeZ, UVs.BottomLeft, uv2),
+                new(new Vector3(x, y, z), Normals.NegativeY, UVs.BottomLeft, uv2),
+                new(new Vector3(x, y, z), Normals.NegativeX, UVs.BottomLeft, uv2),
+                new(new Vector3(x, y, z + 1), Normals.PositiveZ, UVs.TopRight, uv2),
+                new(new Vector3(x, y, z + 1), Normals.NegativeY, UVs.BottomRight, uv2),
+                new(new Vector3(x, y, z + 1), Normals.NegativeX, UVs.BottomRight, uv2),
+                new(new Vector3(x, y + 1, z + 1), Normals.PositiveZ, UVs.TopLeft, uv2),
+                new(new Vector3(x, y + 1, z + 1), Normals.PositiveY, UVs.BottomLeft, uv2),
+                new(new Vector3(x, y + 1, z + 1), Normals.NegativeX, UVs.TopRight, uv2),
+                new(new Vector3(x, y + 1, z), Normals.NegativeZ, UVs.BottomRight, uv2),
+                new(new Vector3(x, y + 1, z), Normals.PositiveY, UVs.BottomRight, uv2),
+                new(new Vector3(x, y + 1, z), Normals.NegativeX, UVs.TopLeft, uv2),
+                new(new Vector3(x + 1, y + 1, z), Normals.NegativeZ, UVs.TopRight, uv2),
+                new(new Vector3(x + 1, y + 1, z), Normals.PositiveY, UVs.TopRight, uv2),
+                new(new Vector3(x + 1, y + 1, z), Normals.PositiveX, UVs.BottomLeft, uv2),
+                new(new Vector3(x + 1, y + 1, z + 1), Normals.PositiveZ, UVs.BottomLeft, uv2),
+                new(new Vector3(x + 1, y + 1, z + 1), Normals.PositiveY, UVs.TopLeft, uv2),
+                new(new Vector3(x + 1, y + 1, z + 1), Normals.PositiveX, UVs.BottomRight, uv2),
+                new(new Vector3(x + 1, y, z + 1), Normals.PositiveZ, UVs.BottomRight, uv2),
+                new(new Vector3(x + 1, y, z + 1), Normals.NegativeY, UVs.TopRight, uv2),
+                new(new Vector3(x + 1, y, z + 1), Normals.PositiveX, UVs.TopRight, uv2),
+                new(new Vector3(x + 1, y, z), Normals.NegativeZ, UVs.TopLeft, uv2),
+                new(new Vector3(x + 1, y, z), Normals.NegativeY, UVs.TopLeft, uv2),
+                new(new Vector3(x + 1, y, z), Normals.PositiveX, UVs.TopLeft, uv2)
             };
             return corners;
         }

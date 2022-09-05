@@ -19,7 +19,7 @@ namespace Terrain
             _yFactor = bounds.size.z;
         }
 
-        public static Chunk Empty = new Chunk(new BoundsInt(0, 0, 0, 0, 0, 0));
+        public static Chunk Empty = new(new BoundsInt(0, 0, 0, 0, 0, 0));
 
 
         public void SetBlock(Vector3Int position, int blockId)

@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Terrain.Mesh;
 
 namespace Terrain
 {
     public class KeyedOrderedSet<TKey, TValue> : ICollection<TValue>
     {
-        private readonly IDictionary<TKey, OrderedSetNode> _dictionary;
+        private readonly IDictionary<TKey, OrderedSetNode<TValue>> _dictionary;
         protected readonly LinkedList<TValue> LinkedList;
 
         private readonly Func<TValue, TKey> _valueToKey;
@@ -19,7 +20,7 @@ namespace Terrain
 
         private KeyedOrderedSet(IEqualityComparer<TKey> comparer)
         {
-            _dictionary = new Dictionary<TKey, OrderedSetNode>(comparer);
+            _dictionary = new Dictionary<TKey, OrderedSetNode<TValue>>(comparer);
             LinkedList = new LinkedList<TValue>();
         }
 
@@ -96,19 +97,7 @@ namespace Terrain
         {
             if (_dictionary.ContainsKey(_valueToKey(item))) return;
             var node = LinkedList.AddLast(item);
-            _dictionary.Add(_valueToKey(item), new OrderedSetNode(node, LinkedList.Count - 1));
-        }
-
-        private class OrderedSetNode
-        {
-            public readonly int Index;
-            public readonly LinkedListNode<TValue> LinkedListNode;
-
-            public OrderedSetNode(LinkedListNode<TValue> linkedListNode, int index)
-            {
-                Index = index;
-                LinkedListNode = linkedListNode;
-            }
+            _dictionary.Add(_valueToKey(item), new OrderedSetNode<TValue>(node, LinkedList.Count - 1));
         }
     }
 }

@@ -1,18 +1,30 @@
-using UnityEngine;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Terrain.Mesh
 {
-    public class CornerBuffer : KeyedOrderedSet<Corner.CornerBufferKey, Corner>
+    public class CornerBuffer : ICollection<Corner>
     {
-        public CornerBuffer() : base(x => x.ToCornerBufferKey())
+        private readonly IDictionary<Corner, OrderedSetNode<Corner>> _dictionary;
+        private readonly LinkedList<Corner> _linkedList;
+
+        public CornerBuffer(): this(new CornerComparer())
         {
         }
+        
+        private CornerBuffer(IEqualityComparer<Corner> comparer)
+        {
+            _dictionary = new Dictionary<Corner, OrderedSetNode<Corner>>(comparer);
+            _linkedList = new LinkedList<Corner>();
+        }
 
+        
         public DecomposedCornerBuffer Decompose()
         {
-            var decomposed = new DecomposedCornerBuffer(LinkedList.Count);
+            var decomposed = new DecomposedCornerBuffer(_linkedList.Count);
             var index = 0;
-            foreach (var item in LinkedList)
+            foreach (var item in _linkedList)
             {
                 decomposed.Set(index, item);
                 index++;
@@ -20,29 +32,69 @@ namespace Terrain.Mesh
 
             return decomposed;
         }
-    }
 
-    public class DecomposedCornerBuffer
-    {
-        public readonly Vector3[] Vertices;
-        public readonly Vector3[] Normals;
-        public readonly Vector2[] UV;
-        public readonly Vector2[] UV2;
-
-        public DecomposedCornerBuffer(int size)
+        public bool Remove(Corner corner)
         {
-            Vertices = new Vector3[size];
-            Normals = new Vector3[size];
-            UV = new Vector2[size];
-            UV2 = new Vector2[size];
+            throw new NotImplementedException();
         }
 
-        public void Set(int index, Corner item)
+        public int Count => _dictionary.Count;
+
+        public bool IsReadOnly => _dictionary.IsReadOnly;
+
+        void ICollection<Corner>.Add(Corner item)
         {
-            Vertices[index] = item.Vertex;
-            Normals[index] = item.Normal;
-            UV[index] = item.uv0;
-            UV2[index] = item.uv2;
+            Add(item);
+        }
+
+        public void Clear()
+        {
+            _linkedList.Clear();
+            _dictionary.Clear();
+        }
+
+        public IEnumerator<Corner> GetEnumerator()
+        {
+            return _linkedList.GetEnumerator();
+        }
+
+        public bool Contains(Corner item)
+        {
+            return item != null && _dictionary.ContainsKey(item);
+        }
+
+        public void CopyTo(Corner[] array, int arrayIndex)
+        {
+            _linkedList.CopyTo(array, arrayIndex);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public void Add(IEnumerable<Corner> items)
+        {
+            foreach (var item in items)
+                Add(item);
+        }
+
+        public bool TryGetIndexOf(Corner value, out int index)
+        {
+            index = 0;
+            var found = _dictionary.TryGetValue(value, out var node);
+
+            if (found)
+                index = node.Index;
+
+            return found;
+        }
+
+        public void Add(Corner item)
+        {
+            if (_dictionary.ContainsKey(item)) return;
+            var node = _linkedList.AddLast(item);
+            _dictionary.Add(item, new OrderedSetNode<Corner>(node, _linkedList.Count - 1));
         }
     }
 }

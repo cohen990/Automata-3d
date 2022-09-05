@@ -6,8 +6,8 @@ namespace Terrain
 {
     public class World : IEnumerable<KeyValuePair<Vector2Int, Chunk>>
     {
-        private readonly Dictionary<Vector2Int, Chunk> _dictionary = new Dictionary<Vector2Int, Chunk>();
-        private readonly Dictionary<Chunk, ChunkBehaviour> _chunkBehaviours = new Dictionary<Chunk, ChunkBehaviour>();
+        private readonly Dictionary<Vector2Int, Chunk> _dictionary = new();
+        private readonly Dictionary<Chunk, ChunkBehaviour> _chunkBehaviours = new();
         private readonly int _chunkSize;
 
         public World(int chunkSize)
