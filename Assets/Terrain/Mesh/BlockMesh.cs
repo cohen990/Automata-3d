@@ -60,8 +60,12 @@ namespace Terrain.Mesh
             var trianglesGlobalVertices = trianglesLocalVertex
                 .Select(localVertex =>
                 {
-                    if(cornersBuffer.TryGetIndexOf(corners[localVertex], out var index))
+                    if (cornersBuffer.TryGetIndexOf(corners[localVertex], out var index))
+                    {
+                        cornersBuffer.UpdateUv2(corners[localVertex]);
                         return index;
+                    }
+
                     cornersBuffer.Add(corners[localVertex]);
                     return cornersBuffer.Count - 1;
                 });

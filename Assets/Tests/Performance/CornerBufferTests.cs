@@ -1,11 +1,8 @@
-﻿using System.Diagnostics;
-using System.IO;
-using NUnit.Framework;
-using SimplexNoise;
-using Terrain;
+﻿using NUnit.Framework;
 using Terrain.Mesh;
 using UnityEngine;
-namespace Tests.Tests
+
+namespace Tests.Performance
 {
     [SetUpFixture]
     public class CornerBufferTestsSetup

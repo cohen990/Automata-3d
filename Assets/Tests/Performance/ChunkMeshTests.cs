@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NUnit.Framework;
 using Terrain;
 using Terrain.Mesh;
 using UnityEngine;
-namespace Tests.Tests
+
+namespace Tests.Performance
 {
     [SetUpFixture]
     public class ChunkMeshTestsSetup

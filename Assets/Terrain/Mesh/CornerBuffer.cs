@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Terrain.Mesh
 {
@@ -95,6 +96,11 @@ namespace Terrain.Mesh
             if (_dictionary.ContainsKey(item)) return;
             var node = _linkedList.AddLast(item);
             _dictionary.Add(item, new OrderedSetNode<Corner>(node, _linkedList.Count - 1));
+        }
+
+        public void UpdateUv2(Corner corner)
+        {
+            _dictionary[corner].LinkedListNode.Value.uv2 = corner.uv2;
         }
     }
 }

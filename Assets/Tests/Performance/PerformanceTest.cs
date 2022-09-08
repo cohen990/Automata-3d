@@ -2,9 +2,8 @@
 using System.Diagnostics;
 using System.IO;
 using NUnit.Framework;
-using UnityEngine;
 
-namespace Tests.Tests
+namespace Tests.Performance
 {
     public class PerformanceTests
     {

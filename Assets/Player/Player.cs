@@ -16,7 +16,6 @@ namespace Player
         private Rigidbody _rigidBody;
         private Transform _camera;
         private Collider _collider;
-        private bool? _grounded;
 
         void Start()
         {
@@ -26,32 +25,16 @@ namespace Player
             var terrain = terrainTransform.gameObject.GetComponent<Terrain.Terrain>();
             _rigidBody.MovePosition(terrain.Spawn);
             _world = terrain.World;
-            _collider = GetComponent<BoxCollider>();
-        }
-
-        private void FixedUpdate()
-        {
-            _grounded = null;
-            if (Input.GetButtonDown("Jump") && IsGrounded())
-            {
-                _rigidBody.AddForce(new Vector3(0, jumpSpeed, 0));
-            }
+            _collider = GetComponent<Collider>();
         }
 
         private bool IsGrounded()
         {
-            if (_grounded.HasValue)
-            {
-                return _grounded.Value;
-            }
-        
             const float castDistance = 0.1f;
-            var rayOrigin = new Vector3(_collider.bounds.center.x, _collider.bounds.min.y + castDistance/2,_collider.bounds.center.z);
-            var wasHit = Physics.Raycast(new Ray(rayOrigin, Vector3.down), out _, castDistance, PhysicsLayers.TerrainMask);
-            _grounded = wasHit;
-            return wasHit;
+            var bounds = _collider.bounds;
+            var rayOrigin = new Vector3(bounds.center.x, bounds.min.y + castDistance/2,bounds.center.z);
+            return Physics.Raycast(new Ray(rayOrigin, Vector3.down), out _, castDistance, PhysicsLayers.TerrainMask);
         }
-
 
         void Update()
         {
@@ -63,6 +46,11 @@ namespace Player
 
             _rigidBody.velocity = moveDirection;
 
+            if (Input.GetButtonDown("Jump") && IsGrounded())
+            {
+                _rigidBody.AddForce(new Vector3(0, jumpSpeed, 0));
+            }
+            
             if (Input.GetButtonDown("Dig"))
             {
                 var rayStart = _camera.transform.position;

@@ -6,21 +6,16 @@ namespace Terrain.Mesh
 {
     public class ChunkMesh
     {
-        private static readonly Vector2 DirtTextureLocation = new(0, 0);
-        private static readonly Vector2 GrassTextureLocation = new(1, 0);
-        private static readonly Vector2 StoneTextureLocation = new(0, 1);
-        private static readonly Vector2 BedrockTextureLocation = new(1, 1);
-        
         private readonly MeshFilter _filter;
         private readonly Chunk _chunk;
         private readonly World _world;
-        private readonly Dictionary<Vector3Int, BlockMesh> _blockMeshes;
+        public readonly Dictionary<Vector3Int, BlockMesh> BlockMeshes;
         private readonly CornerBuffer _cornersBuffer;
 
         private ChunkMesh(Dictionary<Vector3Int, BlockMesh> blockMeshes, CornerBuffer cornersBuffer,
             MeshFilter filter, Chunk chunk, World world)
         {
-            _blockMeshes = blockMeshes;
+            BlockMeshes = blockMeshes;
             _cornersBuffer = cornersBuffer;
             _filter = filter;
             _chunk = chunk;
@@ -33,23 +28,43 @@ namespace Terrain.Mesh
             var trianglesBuffer = new List<int>();
             var blockMeshes = new Dictionary<Vector3Int, BlockMesh>();
 
-            for (var blockIndex = 0; blockIndex < chunk.BlockCount; blockIndex++ )
-            {
-                var blockPosition = chunk.Vector3PositionOf(blockIndex);
-                
-                var faceRenderFlags = FaceRenderFlags(world, blockPosition);
-                var textureLocation = TextureLocation(chunk, blockPosition);
+            GenerateBlockMeshes(chunk, world, cornersBuffer, trianglesBuffer);
+            var mesh = Mesh(meshFilter, cornersBuffer, trianglesBuffer);
+            return ChunkMeshFrom(meshFilter, chunk, world, mesh, blockMeshes, cornersBuffer);
+        }
 
-                BlockMesh.Generate(
-                    blockPosition.x, 
-                    blockPosition.y, 
-                    blockPosition.z, 
-                    cornersBuffer, 
-                    trianglesBuffer,
-                    faceRenderFlags, 
-                    textureLocation);
+        private static ChunkMesh ChunkMeshFrom(MeshFilter meshFilter, Chunk chunk, World world, UnityEngine.Mesh mesh,
+            Dictionary<Vector3Int, BlockMesh> blockMeshes, CornerBuffer cornersBuffer)
+        {
+            var meshVertices = mesh.vertices;
+            var meshTriangles = mesh.triangles;
+            var meshNormals = mesh.normals;
+
+            for (var i = 0; i < meshTriangles.Length; i += 3)
+            {
+                var flooredAverage =
+                    Vector3Int.FloorToInt((meshVertices[meshTriangles[i]] + meshVertices[meshTriangles[i + 1]] +
+                                           meshVertices[meshTriangles[i + 2]]) / 3);
+                var normal = Vector3Int.FloorToInt(flooredAverage - meshNormals[meshTriangles[i]]);
+                var coord = Vector3Int.Min(flooredAverage, normal);
+                
+                blockMeshes.TryAdd(coord, new  BlockMesh());
+                blockMeshes[coord].AddTriangle(i);
             }
 
+            cornersBuffer.Clear();
+            var meshUV = mesh.uv;
+            var meshUV2 = mesh.uv2;
+            for (var i = 0; i < mesh.vertexCount; i++)
+            {
+                cornersBuffer.Add(new Corner(meshVertices[i], meshNormals[i], meshUV[i], meshUV2[i]));
+            }
+
+            return new ChunkMesh(blockMeshes, cornersBuffer, meshFilter, chunk, world);
+        }
+
+        private static UnityEngine.Mesh Mesh(MeshFilter meshFilter, CornerBuffer cornersBuffer, List<int> trianglesBuffer)
+        {
             var decomposed = cornersBuffer.Decompose();
             var mesh = new UnityEngine.Mesh
             {
@@ -62,38 +77,32 @@ namespace Terrain.Mesh
             };
             mesh.Optimize();
             meshFilter.sharedMesh = mesh;
-            var meshVertices = mesh.vertices;
-            var meshTriangles = mesh.triangles;
-            var meshNormals = mesh.normals;
-
-            for (var i = 0; i < meshTriangles.Length; i += 3)
-            {
-                var flooredAverage =
-                    Vector3Int.FloorToInt((meshVertices[meshTriangles[i]] + meshVertices[meshTriangles[i + 1]] + meshVertices[meshTriangles[i + 2]])/3);
-                var normal = Vector3Int.FloorToInt(flooredAverage - meshNormals[meshTriangles[i]]);
-                var coord = Vector3Int.Min(flooredAverage, normal);
-                if (!blockMeshes.ContainsKey(coord))
-                {
-                    blockMeshes[coord] = new BlockMesh();
-                }
-
-                blockMeshes[coord].AddTriangle(i);
-            }
-
-            cornersBuffer.Clear();
-            var meshUV = mesh.uv;
-            var meshUV2 = mesh.uv2;
-            for (var i = 0; i < mesh.vertexCount; i++)
-            {
-                cornersBuffer.Add(new Corner(meshVertices[i], meshNormals[i], meshUV[i], meshUV2[i]));
-            }
-            
-            return new ChunkMesh(blockMeshes, cornersBuffer, meshFilter, chunk, world);
+            return mesh;
         }
-        
+
+        private static void GenerateBlockMeshes(Chunk chunk, World world, CornerBuffer cornersBuffer, List<int> trianglesBuffer)
+        {
+            for (var blockIndex = 0; blockIndex < chunk.BlockCount; blockIndex++)
+            {
+                var blockPosition = chunk.Vector3PositionOf(blockIndex);
+
+                var faceRenderFlags = FaceRenderFlags(world, blockPosition);
+                var textureLocation = TextureLocation(chunk, blockPosition);
+
+                BlockMesh.Generate(
+                    blockPosition.x,
+                    blockPosition.y,
+                    blockPosition.z,
+                    cornersBuffer,
+                    trianglesBuffer,
+                    faceRenderFlags,
+                    textureLocation);
+            }
+        }
+
         public void UpdateBlock(Vector3Int blockPosition)
         {
-            var mesh = _filter.mesh;
+            var mesh = _filter.sharedMesh;
             var triangles = mesh.triangles;
             
             UpdateSingleBlockInternal(blockPosition, triangles);
@@ -115,7 +124,7 @@ namespace Terrain.Mesh
 
         public void UpdateSingleBlock(Vector3Int blockPosition)
         {
-            if (!_blockMeshes.ContainsKey(blockPosition)) return;
+            if (!BlockMeshes.ContainsKey(blockPosition)) return;
             
             var mesh = _filter.mesh;
             var triangles = mesh.triangles;
@@ -134,8 +143,10 @@ namespace Terrain.Mesh
 
         private void UpdateSingleBlockInternal(Vector3Int blockPosition, IList<int> triangles)
         {
-            var blockMeshExists = _blockMeshes.TryGetValue(blockPosition, out var blockMesh);
-            if (!blockMeshExists) return;
+            if (_chunk.IsOutOfBounds(blockPosition)) return;
+            
+            BlockMeshes.TryAdd(blockPosition, new BlockMesh());
+            var blockMesh = BlockMeshes[blockPosition];
             
             var textureLocation = TextureLocation(_chunk, blockPosition);
 
@@ -153,11 +164,10 @@ namespace Terrain.Mesh
             var blockId = chunk.BlockAt(blockPosition);
             var textureLocation = blockId switch
             {
-                Block.STONE => StoneTextureLocation,
-                Block.GRASS => GrassTextureLocation,
-                Block.DIRT => DirtTextureLocation,
-                Block.BEDROCK => BedrockTextureLocation,
-                Block.AIR => Vector2.zero,
+                Block.STONE => TextureLocations.Stone,
+                Block.GRASS => TextureLocations.Grass,
+                Block.DIRT => TextureLocations.Dirt,
+                Block.BEDROCK => TextureLocations.Bedrock,
                 _ => Vector2.negativeInfinity
             };
 

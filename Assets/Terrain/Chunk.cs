@@ -1,8 +1,10 @@
+using System.Collections;
+using System.Linq;
 using UnityEngine;
 
 namespace Terrain
 {
-    public readonly struct Chunk
+    public readonly struct Chunk : IEnumerable
     {
         private readonly int[] _blocks;
         private readonly int _xFactor;
@@ -13,7 +15,7 @@ namespace Terrain
 
         public Chunk(BoundsInt bounds)
         {
-            _blocks = new int[bounds.size.x * bounds.size.y * bounds.size.z];
+            _blocks = Enumerable.Repeat(-1, bounds.size.x * bounds.size.y * bounds.size.z).ToArray();
             Bounds = bounds;
             _xFactor = bounds.size.x * bounds.size.y;
             _yFactor = bounds.size.z;
@@ -82,6 +84,23 @@ namespace Terrain
             var z = index % _yFactor;
             var vector3PositionOf = new Vector3Int(x + Bounds.xMin, y + Bounds.yMin, z + Bounds.zMin);
             return vector3PositionOf;
+        }
+
+        public bool IsOutOfBounds(Vector3Int blockPosition)
+        {
+            if (blockPosition.x < Bounds.xMin || blockPosition.x > Bounds.xMax - 1) return true;
+            if (blockPosition.y < Bounds.yMin || blockPosition.y > Bounds.yMax - 1) return true;
+            return blockPosition.z < Bounds.zMin || blockPosition.z > Bounds.zMax - 1;
+        }
+
+        public IEnumerator GetEnumerator()
+        {
+            return _blocks.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }
