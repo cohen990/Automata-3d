@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using SimplexNoise;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 using Random = System.Random;
 
 namespace Terrain
@@ -12,7 +14,7 @@ namespace Terrain
     {
         private const int WorldHeight = 64;
         private const int ChunkSize = 16;
-        private const int WorldSize = 10;
+        private const int WorldSize = 5;
         [SerializeField] public GameObject chunkPrefab;
         [SerializeField] public GameObject player;
         public World World;
@@ -26,6 +28,7 @@ namespace Terrain
         private GameObject _currentlyGeneratingChunkObject;
         private ChunkBehaviour _currentlyGeneratingChunkBehaviour;
         private Chunk _latestGeneratedChunk;
+        private Stopwatch _timer;
 
         public void Start()
         {
@@ -39,7 +42,7 @@ namespace Terrain
             {
                 _chunksToLoad.Add(new Vector2Int(x, z));
             }
-
+            _timer = new Stopwatch();
         }
 
         public void Update()
@@ -60,7 +63,7 @@ namespace Terrain
             if (_chunkGenerationState == ChunkGenerationState.NotGenerating)
             {
                 var playerPosition = player.transform.position;
-                var playerPositionXZ = new Vector2((playerPosition.x / ChunkSize), playerPosition.z / ChunkSize);
+                var playerPositionXZ = new Vector2(playerPosition.x / ChunkSize, playerPosition.z / ChunkSize);
                 _chunksToLoad = _chunksToLoad.OrderBy(x => Vector2.Distance(playerPositionXZ, x)).ToList(); 
                 _currentlyGeneratingChunk = _chunksToLoad[0];
                 _chunksToLoad.RemoveAt(0);
@@ -74,6 +77,7 @@ namespace Terrain
             switch (_chunkGenerationState)
             {
                 case ChunkGenerationState.NotGenerating:
+                    _timer.Start();
                     _chunkGenerationState = ChunkGenerationState.InstantiatingChunk;
                     StartCoroutine(ChunkGenerator.Generate(coord, ChunkSize, WorldHeight));
                     break;
@@ -100,7 +104,12 @@ namespace Terrain
                     break;
                 case ChunkGenerationState.GeneratingChunkMesh:
                     if (_currentlyGeneratingChunkBehaviour.IsInitialized())
+                    {
+                        Debug.Log($"Initialized {_currentlyGeneratingChunkBehaviour.name} in {_timer.Elapsed}");
+                        _timer.Reset();
                         _chunkGenerationState = ChunkGenerationState.NotGenerating;
+                    }
+
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

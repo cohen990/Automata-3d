@@ -38,7 +38,7 @@ namespace Player
             return Physics.Raycast(new Ray(rayOrigin, Vector3.down), out _, castDistance, PhysicsLayers.TerrainMask);
         }
 
-        void FixedUpdate()
+        void Update()
         {
             if (!_hasSpawned)
             {
