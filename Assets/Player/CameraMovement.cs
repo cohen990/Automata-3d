@@ -15,10 +15,7 @@ namespace Player
             transform.Rotate(new Vector3(rotateVertical, 0, 0) * sensitivity);
             var rotationEuler = transform.rotation.eulerAngles;
             transform.rotation = Quaternion.Euler(rotationEuler.x, rotationEuler.y, 0);
-        }
-
-        void Update()
-        {
+            
             if (!Input.GetButtonDown("Escape")) return;
         
             if (Cursor.lockState == CursorLockMode.Locked)

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Terrain
 {
-    public readonly struct Chunk : IEnumerable
+    public class Chunk : IEnumerable
     {
         private readonly int[] _blocks;
         private readonly int _xFactor;
@@ -21,7 +21,7 @@ namespace Terrain
             _yFactor = bounds.size.z;
         }
 
-        public static Chunk Empty = new(new BoundsInt(0, 0, 0, 0, 0, 0));
+        public static readonly Chunk Empty = new(new BoundsInt(0, 0, 0, 0, 0, 0));
 
 
         public void SetBlock(Vector3Int position, int blockId)

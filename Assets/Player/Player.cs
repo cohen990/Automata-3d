@@ -2,6 +2,7 @@
 using Terrain;
 using UnityEngine;
 using Quaternion = UnityEngine.Quaternion;
+using Terrain = Terrain.Terrain;
 using Vector3 = UnityEngine.Vector3;
 
 namespace Player
@@ -16,15 +17,16 @@ namespace Player
         private Rigidbody _rigidBody;
         private Transform _camera;
         private Collider _collider;
+        private bool _hasSpawned;
+        private global::Terrain.Terrain _terrain;
 
         void Start()
         {
             _rigidBody = GetComponent<Rigidbody>();
             _rigidBody.constraints = RigidbodyConstraints.FreezeRotation;
             _camera = transform.Find("Camera");
-            var terrain = terrainTransform.gameObject.GetComponent<Terrain.Terrain>();
-            _rigidBody.MovePosition(terrain.Spawn);
-            _world = terrain.World;
+            _terrain = terrainTransform.gameObject.GetComponent<global::Terrain.Terrain>();
+            _world = _terrain.World;
             _collider = GetComponent<Collider>();
         }
 
@@ -36,8 +38,18 @@ namespace Player
             return Physics.Raycast(new Ray(rayOrigin, Vector3.down), out _, castDistance, PhysicsLayers.TerrainMask);
         }
 
-        void Update()
+        void FixedUpdate()
         {
+            if (!_hasSpawned)
+            {
+                if (_terrain.HasSpawn)
+                {
+                    _rigidBody.MovePosition(_terrain.Spawn);
+                    _rigidBody.velocity = Vector3.zero;
+                    _hasSpawned = true;
+                }
+            }
+            
             var moveDirection = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
             moveDirection = Quaternion.Euler(new Vector3(0, _camera.rotation.eulerAngles.y, 0)) * moveDirection;
             moveDirection *= groundSpeed;

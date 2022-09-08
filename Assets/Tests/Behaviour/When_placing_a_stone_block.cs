@@ -23,7 +23,12 @@ namespace Tests.Behaviour
             var gameObject = new GameObject();
             var meshFilter = gameObject.AddComponent<MeshFilter>();
             
-            var chunkMesh = ChunkMesh.Generate(meshFilter, chunk, world);
+            var coroutine = ChunkMesh.Generate(meshFilter, chunk, world);
+            while (coroutine.MoveNext())
+            {
+            }
+
+            var chunkMesh = ChunkMesh.Latest;
 
             var blockPosition = new Vector3Int(0, 1, 0);
             chunk.SetBlock(blockPosition, Block.STONE);

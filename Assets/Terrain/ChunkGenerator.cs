@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections;
+using System.Diagnostics;
+using GameEngine;
 using SimplexNoise;
 using UnityEngine;
 
@@ -6,9 +9,14 @@ namespace Terrain
 {
     public static class ChunkGenerator
     {
-        public static Chunk Generate(BoundsInt chunkBounds)
+        private static Chunk _latestChunk;
+
+        public static IEnumerator Generate(Vector2Int chunkCoordinates, int chunkSize, int worldHeight)
         {
+            var chunkBounds = new BoundsInt(chunkCoordinates.x * chunkSize, 0, chunkCoordinates.y * chunkSize, chunkSize, worldHeight, chunkSize);
+            
             var chunk = new Chunk(chunkBounds);
+            var timer = Stopwatch.StartNew();
             for (var x = chunkBounds.xMin; x < chunkBounds.xMax; x++)
             for (var z = chunkBounds.zMin; z < chunkBounds.zMax; z++)
             {
@@ -26,10 +34,15 @@ namespace Terrain
                     var block = ChooseBlock(y, terrainHeight, dirtHeight, x, z);
 
                     chunk.SetBlock(new Vector3Int(x, y, z), block);
+                    
+                    if (timer.ElapsedMilliseconds <= FrameTimer.MAXIMUM_MILLISECONDS_PER_COMPUTATION_BATCH) continue;
+                    timer.Reset();
+                    yield return null;
                 }
             }
 
-            return chunk;
+            _latestChunk = chunk;
+            yield return null;
         }
 
         private static int ChooseBlock(int y, int terrainHeight, float dirtHeight, int x, int z)
@@ -58,5 +71,9 @@ namespace Terrain
 
             return Block.AIR;
         }
+
+        public static bool HasChunk() => _latestChunk != null;
+
+        public static Chunk LatestChunk() => _latestChunk;
     }
 }

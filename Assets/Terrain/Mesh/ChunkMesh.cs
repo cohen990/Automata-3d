@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
+using GameEngine;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -11,6 +14,7 @@ namespace Terrain.Mesh
         private readonly World _world;
         public readonly Dictionary<Vector3Int, BlockMesh> BlockMeshes;
         private readonly CornerBuffer _cornersBuffer;
+        private static ChunkMesh _latest;
 
         private ChunkMesh(Dictionary<Vector3Int, BlockMesh> blockMeshes, CornerBuffer cornersBuffer,
             MeshFilter filter, Chunk chunk, World world)
@@ -22,66 +26,15 @@ namespace Terrain.Mesh
             _world = world;
         }
 
-        public static ChunkMesh Generate(MeshFilter meshFilter, Chunk chunk, World world)
+        public static ChunkMesh Latest => _latest;
+
+        public static IEnumerator Generate(MeshFilter meshFilter, Chunk chunk, World world)
         {
             var cornersBuffer = new CornerBuffer();
             var trianglesBuffer = new List<int>();
             var blockMeshes = new Dictionary<Vector3Int, BlockMesh>();
+            var timer = Stopwatch.StartNew();
 
-            GenerateBlockMeshes(chunk, world, cornersBuffer, trianglesBuffer);
-            var mesh = Mesh(meshFilter, cornersBuffer, trianglesBuffer);
-            return ChunkMeshFrom(meshFilter, chunk, world, mesh, blockMeshes, cornersBuffer);
-        }
-
-        private static ChunkMesh ChunkMeshFrom(MeshFilter meshFilter, Chunk chunk, World world, UnityEngine.Mesh mesh,
-            Dictionary<Vector3Int, BlockMesh> blockMeshes, CornerBuffer cornersBuffer)
-        {
-            var meshVertices = mesh.vertices;
-            var meshTriangles = mesh.triangles;
-            var meshNormals = mesh.normals;
-
-            for (var i = 0; i < meshTriangles.Length; i += 3)
-            {
-                var flooredAverage =
-                    Vector3Int.FloorToInt((meshVertices[meshTriangles[i]] + meshVertices[meshTriangles[i + 1]] +
-                                           meshVertices[meshTriangles[i + 2]]) / 3);
-                var normal = Vector3Int.FloorToInt(flooredAverage - meshNormals[meshTriangles[i]]);
-                var coord = Vector3Int.Min(flooredAverage, normal);
-                
-                blockMeshes.TryAdd(coord, new  BlockMesh());
-                blockMeshes[coord].AddTriangle(i);
-            }
-
-            cornersBuffer.Clear();
-            var meshUV = mesh.uv;
-            var meshUV2 = mesh.uv2;
-            for (var i = 0; i < mesh.vertexCount; i++)
-            {
-                cornersBuffer.Add(new Corner(meshVertices[i], meshNormals[i], meshUV[i], meshUV2[i]));
-            }
-
-            return new ChunkMesh(blockMeshes, cornersBuffer, meshFilter, chunk, world);
-        }
-
-        private static UnityEngine.Mesh Mesh(MeshFilter meshFilter, CornerBuffer cornersBuffer, List<int> trianglesBuffer)
-        {
-            var decomposed = cornersBuffer.Decompose();
-            var mesh = new UnityEngine.Mesh
-            {
-                indexFormat = IndexFormat.UInt32,
-                vertices = decomposed.Vertices,
-                triangles = trianglesBuffer.ToArray(),
-                normals = decomposed.Normals,
-                uv = decomposed.UV,
-                uv2 = decomposed.UV2
-            };
-            mesh.Optimize();
-            meshFilter.sharedMesh = mesh;
-            return mesh;
-        }
-
-        private static void GenerateBlockMeshes(Chunk chunk, World world, CornerBuffer cornersBuffer, List<int> trianglesBuffer)
-        {
             for (var blockIndex = 0; blockIndex < chunk.BlockCount; blockIndex++)
             {
                 var blockPosition = chunk.Vector3PositionOf(blockIndex);
@@ -97,8 +50,58 @@ namespace Terrain.Mesh
                     trianglesBuffer,
                     faceRenderFlags,
                     textureLocation);
+
+                if (timer.ElapsedMilliseconds <= FrameTimer.MAXIMUM_MILLISECONDS_PER_COMPUTATION_BATCH) continue;
+                timer.Restart();
+                yield return null;
             }
+
+            var decomposed = cornersBuffer.Decompose();
+            var mesh = new UnityEngine.Mesh
+            {
+                indexFormat = IndexFormat.UInt32,
+                vertices = decomposed.Vertices,
+                triangles = trianglesBuffer.ToArray(),
+                normals = decomposed.Normals,
+                uv = decomposed.UV,
+                uv2 = decomposed.UV2
+            };
+            mesh.Optimize();
+            meshFilter.sharedMesh = mesh;
+            var meshVertices = mesh.vertices;
+            var meshTriangles = mesh.triangles;
+            var meshNormals = mesh.normals;
+
+            for (var i = 0; i < meshTriangles.Length; i += 3)
+            {
+                var flooredAverage =
+                    Vector3Int.FloorToInt((meshVertices[meshTriangles[i]] + meshVertices[meshTriangles[i + 1]] +
+                                           meshVertices[meshTriangles[i + 2]]) / 3);
+                var normal = Vector3Int.FloorToInt(flooredAverage - meshNormals[meshTriangles[i]]);
+                var coord = Vector3Int.Min(flooredAverage, normal);
+                
+                blockMeshes.TryAdd(coord, new  BlockMesh());
+                blockMeshes[coord].AddTriangle(i);
+                
+                if (timer.ElapsedMilliseconds <= FrameTimer.MAXIMUM_MILLISECONDS_PER_COMPUTATION_BATCH) continue;
+                timer.Restart();
+                yield return null;
+            }
+
+            cornersBuffer.Clear();
+            var meshUV = mesh.uv;
+            var meshUV2 = mesh.uv2;
+            for (var i = 0; i < mesh.vertexCount; i++)
+            {
+                cornersBuffer.Add(new Corner(meshVertices[i], meshNormals[i], meshUV[i], meshUV2[i]));
+                if (timer.ElapsedMilliseconds <= FrameTimer.MAXIMUM_MILLISECONDS_PER_COMPUTATION_BATCH) continue;
+                timer.Restart();
+                yield return null;
+            }
+
+            _latest = new ChunkMesh(blockMeshes, cornersBuffer, meshFilter, chunk, world);
         }
+
 
         public void UpdateBlock(Vector3Int blockPosition)
         {

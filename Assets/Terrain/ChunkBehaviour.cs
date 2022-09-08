@@ -1,4 +1,5 @@
-﻿using Terrain.Mesh;
+﻿using System.Collections;
+using Terrain.Mesh;
 using UnityEngine;
 
 namespace Terrain
@@ -11,13 +12,22 @@ namespace Terrain
         public World World { get; set; }
 
         private ChunkMesh _chunkMesh;
+        private bool _initialized;
+        private bool _instantiated;
 
         private void Start()
         {
             _collider = GetComponent<MeshCollider>();
             _filter = GetComponent<MeshFilter>();
-            _chunkMesh = ChunkMesh.Generate(_filter, Chunk, World);
+            _instantiated = true;
+        }
+        
+        public IEnumerator Initialize()
+        {
+            yield return ChunkMesh.Generate(_filter, Chunk, World);
+            _chunkMesh = ChunkMesh.Latest;
             _collider.sharedMesh = _filter.sharedMesh;
+            _initialized = true;
         }
 
         public void UpdateBlock(Vector3Int blockPosition)
@@ -31,5 +41,9 @@ namespace Terrain
             _chunkMesh.UpdateSingleBlock(blockPosition);
             _collider.sharedMesh = _filter.sharedMesh;
         }
+
+        public bool IsInitialized() => _initialized;
+        public bool IsInstantiated() => _instantiated;
+
     }
 }
